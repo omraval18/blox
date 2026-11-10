@@ -1,13 +1,15 @@
 # Blox
 
 A tiny tiling window manager for macOS. Keyboard-driven, configured with one TOML file, no
-dependencies, no SIP changes. The whole app is about 260 KB.
+dependencies, no SIP changes. The whole app is about 400 KB.
 
 - **Tiling** with three layouts: `dwindle`, `primary` (one big window and a stack), `monocle`.
 - **Virtual workspaces** (windows are parked offscreen, so there are no Space-switch animations).
 - **Multi-monitor**: each display shows its own workspace.
 - **Hot-reloaded config** with line-numbered errors shown in the menu bar.
-- **Optional animation** with bezier curves.
+- **Animation** with bezier curves and presets copied from popular Hyprland configs (off by default).
+- **Window borders**: a gradient ring on the focused window, a softer one on the rest.
+- **Menu bar** shows the current workspace; the menu lists every workspace and its apps.
 - **CLI** (`blox focus left`) over a private Unix socket.
 - Idle cost is near zero: everything is event-driven; there are no timers or polling.
 

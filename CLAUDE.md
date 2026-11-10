@@ -1,12 +1,12 @@
 # Blox
 
-Lightweight tiling window manager for macOS. Hyprland-style config and animation, AeroSpace-style
-virtual workspaces, built on the Accessibility API. v1 scope: window tree, dwindle + master layouts,
-virtual workspaces, multi-monitor, hotkeys, TOML config with hot reload, CLI over a Unix socket,
-snapshot-overlay animations driven by an animation tree.
+Lightweight tiling window manager for macOS in Swift. AeroSpace-style virtual workspaces and
+keybindings, Hyprland/hyprdots-style animation and borders, built on the Accessibility API.
+Current state and next steps: `docs/HANDOFF.md` (read it first). Benchmarking: `docs/benchmarking.md`.
 
 ## Commands
 - Build: `swift build` · Test: `Scripts/test.sh` · Full gate: `Scripts/lint.sh` (must pass before any commit)
+- Package: `Scripts/release.sh` (app bundle + zip) · Runtime memory: `Scripts/bench.sh` · Compare managers: `Scripts/bench-compare.swift`
 
 ## Architecture (dependencies point inward only)
 - `BloxCore`: pure Swift. Model, layout algorithms, command reducer, animation math, config schema.
@@ -24,14 +24,17 @@ snapshot-overlay animations driven by an animation tree.
 - Public surface is minimal: default to `internal`; expose only what another target needs.
 - Fewest lines that stay clear. No speculative abstraction, no comments restating code, no unused code.
 
-## Performance budgets (idle CPU ~0%, RAM < 30 MB, layout pass < 10 ms)
-- Event-driven only: AXObserver, NSWorkspace notifications, CGEventTap. No timers, no polling.
-- Diff target frames against current ones; skip unchanged windows. Per-app AX work off the main actor, with timeouts.
-- Overlays and snapshots exist only while an animation runs, then are released. One-shot capture, never live streams.
-- Animation math runs on Core Animation (GPU), never per-frame in Swift.
+## Performance budgets (idle CPU ~0%, memory footprint < 30 MB, layout pass < 10 ms)
+- Event-driven only: AXObserver, NSWorkspace notifications, hotkeys via RegisterEventHotKey. No timers, no polling.
+- Diff target frames against current ones; skip unchanged windows. AX calls use 1 s messaging timeouts.
+- Animation moves real windows through AX, driven by a CADisplayLink that exists only while animating.
+  One border panel per visible window, updated only when its window or focus changes.
+- Measure, do not guess: `Scripts/bench.sh` on the running app; `PerformanceTests` guard the core.
 
 ## Workflow
 - Test first for Core (reducer, layouts, config). Core is pure, so tests need no screen or apps.
+- Never launch the app against the user's live windows without their consent; they use AeroSpace daily.
+- No `swift test` directly on this machine (Command Line Tools only): use `Scripts/test.sh`.
 - Define or change a port/type interface and get it reviewed BEFORE implementing against it.
 - One small vertical slice per change. Record non-obvious decisions in `docs/adr/`.
 
