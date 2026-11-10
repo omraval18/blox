@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/logo.png" width="128" alt="Blox logo">
+
 # Blox
 
 **A tiny tiling window manager for macOS.**

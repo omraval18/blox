@@ -9,7 +9,8 @@ grep -q "bloxVersion = \"$version\"" Sources/BloxIPC/Version.swift \
 
 swift build -c release
 app=dist/Blox.app
-rm -rf dist && mkdir -p "$app/Contents/MacOS" "$app/Contents/Helpers"
+rm -rf dist && mkdir -p "$app/Contents/MacOS" "$app/Contents/Helpers" "$app/Contents/Resources"
+cp Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 strip -x -o "$app/Contents/MacOS/Blox" .build/release/BloxApp
 strip -x -o "$app/Contents/Helpers/blox" .build/release/blox
 
@@ -19,6 +20,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
     <key>CFBundleIdentifier</key><string>dev.blox.Blox</string>
     <key>CFBundleName</key><string>Blox</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleExecutable</key><string>Blox</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>$version</string>
@@ -35,6 +37,7 @@ ditto -c -k --keepParent "$app" "dist/Blox-$version.zip"
 
 stage=$(mktemp -d)
 cp -R "$app" "$stage/" && ln -s /Applications "$stage/Applications"
+cp Resources/AppIcon.icns "$stage/.VolumeIcon.icns" && SetFile -a C "$stage"
 hdiutil create -quiet -volname "Blox $version" -srcfolder "$stage" -ov -format UDZO "dist/Blox-$version.dmg"
 rm -rf "$stage"
 

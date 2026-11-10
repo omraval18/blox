@@ -1,4 +1,4 @@
-# Blox handoff (state as of v0.0.17)
+# Blox handoff (state as of v0.0.18)
 
 Read this first in a new session, then `CLAUDE.md` (rules) and `docs/benchmarking.md`.
 
@@ -12,9 +12,9 @@ each tagged; `VERSION` and `Sources/BloxIPC/Version.swift` must match (a test ch
 
 ## Where things stand
 
-- Repo `main`, clean, tags `v0.0.1`..`v0.0.17`. 79 source files (largest 121 lines), 17 test
+- Repo `main`, clean, tags `v0.0.1`..`v0.0.18`. 79 source files (largest 121 lines), 17 test
   files, **86 tests passing**, lint clean.
-- **Installed locally**: `/Applications/Blox.app` v0.0.16 (v0.0.17 built, not yet installed), CLI symlinked at `/opt/homebrew/bin/blox`
+- **Installed locally**: `/Applications/Blox.app` v0.0.16 (v0.0.18 built, not yet installed), CLI symlinked at `/opt/homebrew/bin/blox`
   (into the app bundle). Blox is **not running**: the owner uses **AeroSpace** as their daily driver
   (start-at-login on). Never launch Blox without their say-so; it tiles every open window and both
   managers fight over the same keys.
