@@ -20,6 +20,9 @@ struct ConfigTests {
 
     @Test(arguments: [
         ("[gaps]\ninner = abc", 2),
+        ("[animation]\nenabled = 1", 2),
+        ("[animation]\ncurve = \"bouncy\"", 2),
+        ("[animation]\nduration = 9", 2),
         ("[gaps]\ninner = 500", 2),
         ("[gapz]\ninner = 1", 2),
         ("[layout]\ndefault = \"grid\"", 2),

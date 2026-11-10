@@ -25,6 +25,9 @@ public struct Config: Equatable, Sendable {
         case ("gaps", "outer"): settings.gaps.outer = try number(entry, in: 0 ... 200)
         case ("layout", "default"): settings.defaultLayout = try layout(entry)
         case ("layout", "ratio"): settings.defaultRatio = try number(entry, in: Tiling.ratioRange)
+        case ("animation", "enabled"): settings.animation.enabled = try flag(entry)
+        case ("animation", "duration"): settings.animation.duration = try number(entry, in: 0.05 ... 1)
+        case ("animation", "curve"): settings.animation.curve = try curve(entry)
         case ("bindings", _): try bindings.append(binding(entry))
         default: throw ConfigError(line: entry.line, message: "unknown setting '\(table).\(entry.key)'")
         }
@@ -35,6 +38,21 @@ public struct Config: Equatable, Sendable {
             throw ConfigError(line: entry.line, message: "'\(entry.key)' must be a number in \(range)")
         }
         return value
+    }
+
+    private func flag(_ entry: TOMLEntry) throws -> Bool {
+        guard case let .bool(value) = entry.value else {
+            throw ConfigError(line: entry.line, message: "'\(entry.key)' must be true or false")
+        }
+        return value
+    }
+
+    private func curve(_ entry: TOMLEntry) throws -> Curve {
+        guard let curve = entry.value.string.flatMap(Curve.init) else {
+            let names = Curve.presetNames.joined(separator: ", ")
+            throw ConfigError(line: entry.line, message: "curve must be one of: \(names), or four numbers")
+        }
+        return curve
     }
 
     private func layout(_ entry: TOMLEntry) throws -> LayoutKind {

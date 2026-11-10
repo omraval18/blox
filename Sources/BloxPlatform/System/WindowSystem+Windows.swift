@@ -14,6 +14,7 @@ extension WindowSystem {
         guard let id = ids.removeValue(forKey: element) else { return }
         windows.removeValue(forKey: id)
         parked.removeValue(forKey: id)
+        animator.forget(id)
         onCommand(.windowDisappeared(id))
     }
 

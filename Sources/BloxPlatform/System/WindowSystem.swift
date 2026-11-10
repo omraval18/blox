@@ -10,6 +10,9 @@ public final class WindowSystem {
     var windows: [WindowID: AXWindow] = [:]
     var ids: [AXUIElement: WindowID] = [:]
     var parked: [WindowID: CGRect] = [:]
+    let animator = FrameAnimator()
+    /// Set by the app whenever the config changes.
+    public var animation = AnimationSettings()
     private var tokens: [any NSObjectProtocol] = []
 
     public init(onCommand: @escaping @MainActor (Command) -> Void) {

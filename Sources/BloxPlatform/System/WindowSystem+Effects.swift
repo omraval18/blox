@@ -23,17 +23,20 @@ extension WindowSystem {
 
     private func place(_ id: WindowID, _ frame: CGRect) {
         parked.removeValue(forKey: id)
-        windows[id]?.setFrame(frame)
+        guard let window = windows[id] else { return }
+        animator.move(window, to: frame, using: animation)
     }
 
     private func park(_ id: WindowID) {
         guard let window = windows[id], parked[id] == nil, let frame = window.frame else { return }
         parked[id] = frame
+        animator.forget(id)
         window.move(to: Displays.parkingPoint())
     }
 
     private func unpark(_ id: WindowID) {
         guard let frame = parked.removeValue(forKey: id) else { return }
         windows[id]?.setFrame(frame)
+        animator.record(id, frame)
     }
 }

@@ -41,6 +41,14 @@ struct AXWindow {
         AXAttribute.set(element, kAXSizeAttribute, size: frame.size)
     }
 
+    /// One animation step: cheaper than `setFrame` (no settling pass), and move-only when size is fixed.
+    func setStep(_ frame: CGRect, resizing: Bool) {
+        if resizing {
+            AXAttribute.set(element, kAXSizeAttribute, size: frame.size)
+        }
+        AXAttribute.set(element, kAXPositionAttribute, point: frame.origin)
+    }
+
     func move(to point: CGPoint) {
         AXAttribute.set(element, kAXPositionAttribute, point: point)
     }

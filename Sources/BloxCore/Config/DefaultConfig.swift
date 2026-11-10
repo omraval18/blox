@@ -11,6 +11,12 @@ public extension Config {
     default = "dwindle"   # dwindle | primary | monocle
     ratio = 0.5
 
+    # Window movement animation. Off by default; on, windows glide to their new place.
+    [animation]
+    enabled = false
+    duration = 0.18
+    curve = "snappy"   # linear | ease-out | ease-in-out | snappy | "x1 y1 x2 y2"
+
     [bindings]
     "alt-h" = "focus left"
     "alt-j" = "focus down"

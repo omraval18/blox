@@ -50,6 +50,7 @@ final class Controller {
         } catch {
             return "\(error)"
         }
+        system.animation = config.settings.animation
         dispatch(.updateSettings(config.settings))
         let refused = hotkeys.register(config.bindings.map(\.chord))
         refused.forEach { log.error("hotkey unavailable: \($0.key)") }
