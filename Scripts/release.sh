@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds dist/Blox.app (menu bar agent + bundled CLI) and dist/Blox-<version>.zip.
+# Builds dist/Blox.app (menu bar agent + bundled CLI), dist/Blox-<version>.zip and dist/Blox-<version>.dmg.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -32,5 +32,11 @@ PLIST
 codesign --force --sign - "$app"
 codesign --verify --strict "$app"
 ditto -c -k --keepParent "$app" "dist/Blox-$version.zip"
-(cd dist && shasum -a 256 "Blox-$version.zip" > "Blox-$version.zip.sha256")
-echo "built dist/Blox-$version.zip ($(stat -f %z "dist/Blox-$version.zip") bytes)"
+
+stage=$(mktemp -d)
+cp -R "$app" "$stage/" && ln -s /Applications "$stage/Applications"
+hdiutil create -quiet -volname "Blox $version" -srcfolder "$stage" -ov -format UDZO "dist/Blox-$version.dmg"
+rm -rf "$stage"
+
+(cd dist && shasum -a 256 "Blox-$version.zip" "Blox-$version.dmg" > "Blox-$version.sha256")
+echo "built dist/Blox-$version.zip and .dmg ($(stat -f %z "dist/Blox-$version.dmg") bytes)"
