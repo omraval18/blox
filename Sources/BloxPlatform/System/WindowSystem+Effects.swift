@@ -14,6 +14,13 @@ extension WindowSystem {
         }
     }
 
+    /// Puts every parked window back where it was. Called on quit so nothing is left offscreen.
+    public func restoreParked() {
+        for id in Array(parked.keys) {
+            unpark(id)
+        }
+    }
+
     private func place(_ id: WindowID, _ frame: CGRect) {
         parked.removeValue(forKey: id)
         windows[id]?.setFrame(frame)

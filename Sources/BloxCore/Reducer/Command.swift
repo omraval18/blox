@@ -13,4 +13,5 @@ public enum Command: Equatable, Sendable {
     case resize(Double)
     case toggleFloating
     case retile
+    case updateSettings(Settings)
 }

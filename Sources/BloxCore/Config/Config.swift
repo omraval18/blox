@@ -7,6 +7,8 @@ public struct Config: Equatable, Sendable {
     public var settings = Settings()
     public var bindings: [Binding] = []
 
+    public init() {}
+
     /// Parses and validates config text. Unknown sections and keys are errors so typos surface.
     public init(parsing text: String) throws {
         let tables = try TOMLParser.parse(text)

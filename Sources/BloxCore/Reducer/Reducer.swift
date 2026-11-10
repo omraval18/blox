@@ -24,6 +24,7 @@ extension State {
         case let .resize(delta): updateFocused { $0.ratio = min(max($0.ratio + delta, 0.1), 0.9) }
         case .toggleFloating: toggleFloatingFocused()
         case .retile: break
+        case let .updateSettings(settings): self.settings = settings
         }
     }
 }
