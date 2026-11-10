@@ -2,25 +2,32 @@ import BloxCore
 import CoreGraphics
 
 extension WindowSystem {
-    /// Tells the system which window has focus (from the model), moving the ring to it.
+    /// Tells the system which window has focus (from the model), restyling the rings.
     public func setFocused(_ id: WindowID?) {
         guard id != focusedID else { return }
+        let previous = focusedID
         focusedID = id
-        syncBorder()
+        border.active = id
+        [previous, id].compactMap(\.self).forEach(refreshBorder)
     }
 
-    func syncBorder() {
-        guard let id = focusedID, let window = windows[id],
+    /// Re-applies border settings to every window that has a frame.
+    func syncBorders() {
+        windows.keys.filter { parked[$0] == nil }.forEach(refreshBorder)
+    }
+
+    func refreshBorder(_ id: WindowID) {
+        guard let window = windows[id], parked[id] == nil,
               let frame = animator.frame(of: id) ?? window.frame else {
-            border.hide()
+            border.remove(id)
             return
         }
-        border.show(around: frame, above: id.rawValue)
+        border.update(id, frame: frame)
     }
 
     func followBorder(_ id: WindowID, _ frame: CGRect) {
-        if id == focusedID {
-            border.move(to: frame)
+        if parked[id] == nil {
+            border.update(id, frame: frame)
         }
     }
 }

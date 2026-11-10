@@ -4,9 +4,11 @@
 # Not ported (Blox keeps a flat window list, not nested containers): join-with,
 # flatten-workspace-tree, close-all-windows-but-current, accordion padding.
 
+# hyprdots: gaps_in = 3 (two windows touching = 6) and gaps_out = 8. The ring sits outside the
+# window, so a couple of points extra keep the same visible spacing.
 [gaps]
-inner = 12
-outer = 8
+inner = 10
+outer = 10
 
 [layout]
 default = "dwindle"
@@ -16,21 +18,25 @@ ratio = 0.5
 [focus]
 mouse-follows = true
 
-# Focus ring: a thin, translucent hairline (last two hex digits are opacity). Radius matches
-# macOS windows. Set enabled = false to turn it off. Bolder looks to try:
-#   colors = "33ccff 00ff99" (cyan to green), "e5b9c6 c293a3" (soft pink), "ff6ac1 8be9fd" (neon)
+# Window borders, from hyprdots (Catppuccin): focused windows get a mauve-to-rosewater gradient,
+# the rest a soft grey-blue. Last two hex digits are opacity. radius matches macOS windows
+# (hyprdots uses 10 for its own rounding). Set enabled = false to turn borders off, or remove the
+# inactive line to ring only the focused window.
 [border]
 enabled = true
 width = 2
 radius = 20
-colors = "a78bfa99 60a5fa99"
+colors = "ca9ee6 f2d5cf"
+inactive = "b4befecc 6c7086cc"
 angle = 45
 
-# Animation. Styles come from popular Hyprland configs. Press alt-shift-period to enter the
-# "anim" mode and try them live: 1 snappy, 2 fast, 3 hyprland, 4 end4, 5 ml4w, 6 wind,
-# 7 smooth, 8 circ, 9 quart, o overshoot, b bounce, x off, esc back.
+# Animation, copied from prasanthrangan/hyprdots: the "wind" curve at its window-move speed
+# (0.5 s). Press alt-shift-period for the "anim" mode to try every preset live:
+#   1 hyprdots  2 classic  3 diablo  4 diablo-overshoot  5 minimal  6 moving  7 optimized
+#   8 vertical  h hyprland  e end4  w wind  s smooth  c circ  q quart  o overshoot  b bounce
+#   f fast  n snappy  x off   (esc to leave)
 [animation]
-style = "hyprland"
+style = "hyprdots"
 
 # Your own beziers, Hyprland-style: name = "x1 y1 x2 y2". Use one with  curve = "<name>"
 # under [animation]. These come straight from configs by end-4, JaKooLit and linuxmobile.
@@ -147,17 +153,24 @@ f = "toggle-floating ; mode main"
 
 # Animation playground: each key switches the style live, so you can feel the difference.
 [mode.anim]
-"1" = "animation snappy"
-"2" = "animation fast"
-"3" = "animation hyprland"
-"4" = "animation end4"
-"5" = "animation ml4w"
-"6" = "animation wind"
-"7" = "animation smooth"
-"8" = "animation circ"
-"9" = "animation quart"
+"1" = "animation hyprdots"
+"2" = "animation classic"
+"3" = "animation diablo"
+"4" = "animation diablo-overshoot"
+"5" = "animation minimal"
+"6" = "animation moving"
+"7" = "animation optimized"
+"8" = "animation vertical"
+h = "animation hyprland"
+e = "animation end4"
+w = "animation wind"
+s = "animation smooth"
+c = "animation circ"
+q = "animation quart"
 o = "animation overshoot"
 b = "animation bounce"
+f = "animation fast"
+n = "animation snappy"
 x = "animation off"
 esc = "mode main"
 enter = "mode main"

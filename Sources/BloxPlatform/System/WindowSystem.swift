@@ -16,7 +16,7 @@ public final class WindowSystem {
         didSet {
             guard settings.border != oldValue.border else { return }
             border.apply(settings.border)
-            syncBorder()
+            syncBorders()
         }
     }
 

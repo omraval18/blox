@@ -8,7 +8,12 @@ enum PlacementDiff {
             switch placement {
             case let .frame(frame): return .place(id, frame)
             case .parked: return .park(id)
-            case .free: return old[id] == .parked ? .unpark(id) : nil
+            case .free:
+                switch old[id] {
+                case .parked: return .unpark(id)
+                case .frame: return .release(id)
+                default: return nil
+                }
             }
         }
     }

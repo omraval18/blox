@@ -10,6 +10,7 @@ extension WindowSystem {
             case let .park(id): park(id)
             case let .unpark(id): unpark(id)
             case let .focus(id): focus(id)
+            case let .release(id): border.remove(id)
             case let .run(line): run(line)
             }
         }
@@ -49,6 +50,7 @@ extension WindowSystem {
         guard let window = windows[id], parked[id] == nil, let frame = window.frame else { return }
         parked[id] = frame
         animator.forget(id)
+        border.remove(id)
         window.move(to: Displays.parkingPoint())
     }
 
@@ -56,5 +58,6 @@ extension WindowSystem {
         guard let frame = parked.removeValue(forKey: id) else { return }
         windows[id]?.setFrame(frame)
         animator.record(id, frame)
+        followBorder(id, frame)
     }
 }

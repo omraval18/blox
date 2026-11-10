@@ -40,6 +40,7 @@ public struct Config: Equatable, Sendable {
         case ("border", "radius"): settings.border.radius = try number(entry, in: 0 ... 40)
         case ("border", "angle"): settings.border.angle = try number(entry, in: 0 ... 360)
         case ("border", "colors"): settings.border.colors = try colors(entry)
+        case ("border", "inactive"): settings.border.inactiveColors = try colors(entry)
         case ("rules", _): settings.rules[entry.key] = try rule(entry)
         default:
             guard let mode = Self.modeName(forTable: table) else {

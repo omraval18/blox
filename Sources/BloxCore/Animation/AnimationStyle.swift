@@ -1,7 +1,16 @@
-/// Ready-made animation feels. Each is a curve plus duration (Hyprland's `speed` is in tenths of
-/// a second; these are tuned shorter because windows are moved through Accessibility).
+/// Ready-made animation feels. Each is a curve plus duration. The `hyprdots` family is copied
+/// from prasanthrangan/hyprdots with its window-move curve and speed unchanged (Hyprland's
+/// `speed` is in tenths of a second); the others are tuned shorter.
 public enum AnimationStyle {
     private static let styles: [String: (duration: Double, curve: Curve)] = [
+        "hyprdots": (0.50, .wind),
+        "classic": (0.70, .wind),
+        "diablo": (0.60, .diabloBounce),
+        "diablo-overshoot": (0.60, .diabloOvershoot),
+        "minimal": (0.60, .easeOutQuart),
+        "moving": (0.40, .smoothIn),
+        "optimized": (0.30, .optimizedWind),
+        "vertical": (0.15, .easeInOutSine),
         "snappy": (0.18, .snappy),
         "fast": (0.15, .easeOutExpo),
         "hyprland": (0.30, .easeOutQuint),

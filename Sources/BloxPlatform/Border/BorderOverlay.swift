@@ -1,107 +1,59 @@
-import AppKit
 import BloxCore
-import QuartzCore
+import CoreGraphics
 
-/// A click-through ring hugging the focused window, stacked directly above that window so menus and
-/// other windows still cover it. It only changes when focus or the window's frame changes.
+/// Keeps one `Ring` per visible window: the focused window gets the active look, the others the
+/// inactive look (or none, when no inactive colors are configured).
 @MainActor
 final class BorderOverlay {
-    private let panel: RingPanel
-    private let gradient = CAGradientLayer()
-    private let ring = CAShapeLayer()
     private var settings = BorderSettings()
-    private var windowFrame = CGRect.zero
-
-    init() {
-        panel = RingPanel(
-            contentRect: .zero,
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: true,
-        )
-        panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = false
-        panel.ignoresMouseEvents = true
-        panel.hidesOnDeactivate = false
-        panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
-        let view = NSView()
-        view.wantsLayer = true
-        ring.fillRule = .evenOdd
-        gradient.mask = ring
-        view.layer?.addSublayer(gradient)
-        panel.contentView = view
-    }
+    private var rings: [WindowID: Ring] = [:]
+    var active: WindowID?
 
     func apply(_ new: BorderSettings) {
         settings = new
-        gradient.colors = new.colors.map { CGColor(
-            red: $0.red,
-            green: $0.green,
-            blue: $0.blue,
-            alpha: $0.alpha,
-        ) }
-        if new.colors.count == 1 {
-            gradient.colors = (gradient.colors ?? []) + (gradient.colors ?? [])
-        }
-        let radians = new.angle * .pi / 180
-        gradient.startPoint = CGPoint(x: 0.5 - cos(radians) / 2, y: 0.5 - sin(radians) / 2)
-        gradient.endPoint = CGPoint(x: 0.5 + cos(radians) / 2, y: 0.5 + sin(radians) / 2)
-        if new.enabled, panel.isVisible {
-            layout()
-        } else if !new.enabled {
-            hide()
+        guard new.enabled else { return removeAll() }
+        for (id, ring) in rings {
+            restyle(ring, id)
         }
     }
 
-    /// Shows the ring around `frame` (top-left coordinates), directly above window `windowNumber`.
-    func show(around frame: CGRect, above windowNumber: UInt32) {
-        guard settings.enabled else { return }
-        windowFrame = frame
-        layout()
-        panel.order(.above, relativeTo: Int(windowNumber))
+    /// Creates, restyles or moves the ring for `id`. A ring that just became active or was just
+    /// created is also raised to sit right above its window.
+    func update(_ id: WindowID, frame: CGRect) {
+        guard settings.enabled, !colors(for: id).isEmpty else { return remove(id) }
+        guard let ring = rings[id] else {
+            let ring = Ring()
+            rings[id] = ring
+            restyle(ring, id)
+            ring.show(around: frame, above: id.rawValue)
+            return
+        }
+        if ring.isActive != (id == active) {
+            restyle(ring, id)
+            ring.show(around: frame, above: id.rawValue)
+        } else {
+            ring.move(to: frame)
+        }
     }
 
-    func move(to frame: CGRect) {
-        guard panel.isVisible else { return }
-        windowFrame = frame
-        layout()
+    func remove(_ id: WindowID) {
+        rings.removeValue(forKey: id)?.close()
     }
 
-    func hide() {
-        panel.orderOut(nil)
+    func removeAll() {
+        rings.values.forEach { $0.close() }
+        rings.removeAll()
     }
 
-    private func layout() {
-        let outer = windowFrame.insetBy(dx: -settings.width, dy: -settings.width)
-        panel.setFrame(Displays.appKitRect(outer), display: false)
-        let bounds = CGRect(origin: .zero, size: outer.size)
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        gradient.frame = bounds
-        ring.frame = bounds
-        ring.path = ringPath(in: bounds)
-        CATransaction.commit()
+    var tracked: [WindowID] {
+        Array(rings.keys)
     }
 
-    private func ringPath(in bounds: CGRect) -> CGPath {
-        let inner = bounds.insetBy(dx: settings.width, dy: settings.width)
-        let path = CGMutablePath()
-        path.addRoundedRect(
-            in: bounds,
-            cornerWidth: clamp(settings.radius + settings.width, bounds),
-            cornerHeight: clamp(settings.radius + settings.width, bounds),
-        )
-        path.addRoundedRect(
-            in: inner,
-            cornerWidth: clamp(settings.radius, inner),
-            cornerHeight: clamp(settings.radius, inner),
-        )
-        return path
+    private func restyle(_ ring: Ring, _ id: WindowID) {
+        ring.configure(settings, active: id == active)
     }
 
-    private func clamp(_ radius: Double, _ rect: CGRect) -> Double {
-        max(0, min(radius, min(rect.width, rect.height) / 2))
+    private func colors(for id: WindowID) -> [RGBA] {
+        id == active ? settings.colors : settings.inactiveColors
     }
 }
