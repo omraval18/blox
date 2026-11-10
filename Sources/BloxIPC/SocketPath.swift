@@ -1,8 +1,8 @@
-import Foundation
+import Darwin
 
-/// Location of the Unix domain socket the app listens on and the CLI connects to.
+/// Where the app listens and the CLI connects. Per-user, and the socket file is mode 0600.
 public enum SocketPath {
-    public static func `default`(user: String = NSUserName()) -> String {
-        "/tmp/blox-\(user).sock"
+    public static var `default`: String {
+        "/tmp/blox-\(getuid()).sock"
     }
 }

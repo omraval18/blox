@@ -41,6 +41,7 @@ opt_in_rules:
   - vertical_whitespace_closing_braces
 
 disabled_rules:
+  - optional_data_string_conversion   # false positive on String(decoding:) of [UInt8]
   - todo   # replaced by custom rule below (TODOs are errors)
 
 # Safety

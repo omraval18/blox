@@ -30,5 +30,6 @@ let package = Package(
         ),
         .executableTarget(name: "BloxCLI", dependencies: ["BloxIPC"], swiftSettings: strict),
         .testTarget(name: "BloxCoreTests", dependencies: ["BloxCore"], swiftSettings: strict),
+        .testTarget(name: "BloxIPCTests", dependencies: ["BloxIPC"], swiftSettings: strict),
     ],
 )
