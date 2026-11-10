@@ -1,0 +1,27 @@
+import ApplicationServices
+import BloxCore
+
+extension WindowSystem {
+    func adopt(_ element: AXUIElement) {
+        guard let window = AXWindow(element), windows[window.id] == nil, window.isTileable else { return }
+        windows[window.id] = window
+        ids[element] = window.id
+        observers[window.pid]?.watch(element)
+        onCommand(.windowAppeared(window.id))
+    }
+
+    func release(_ element: AXUIElement) {
+        guard let id = ids.removeValue(forKey: element) else { return }
+        windows.removeValue(forKey: id)
+        parked.removeValue(forKey: id)
+        onCommand(.windowDisappeared(id))
+    }
+
+    func handle(_ event: AXEvent) {
+        switch event {
+        case let .created(element), let .restored(element): adopt(element)
+        case let .destroyed(element), let .minimized(element): release(element)
+        case let .focused(element): ids[element].map { onCommand(.focusChanged($0)) }
+        }
+    }
+}

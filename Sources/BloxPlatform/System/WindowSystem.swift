@@ -1,0 +1,48 @@
+import AppKit
+import ApplicationServices
+import BloxCore
+
+/// Bridges macOS windows to BloxCore: reports what happens as `Command`s and performs `Effect`s.
+@MainActor
+public final class WindowSystem {
+    let onCommand: @MainActor (Command) -> Void
+    var observers: [pid_t: AppObserver] = [:]
+    var windows: [WindowID: AXWindow] = [:]
+    var ids: [AXUIElement: WindowID] = [:]
+    var parked: [WindowID: CGRect] = [:]
+    private var tokens: [any NSObjectProtocol] = []
+
+    public init(onCommand: @escaping @MainActor (Command) -> Void) {
+        self.onCommand = onCommand
+    }
+
+    public func start() {
+        onCommand(.monitorsChanged(Displays.monitors()))
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            attach(app.processIdentifier)
+        }
+        tokens = subscribeToSystemEvents()
+        reportFrontmostFocus()
+    }
+
+    func attach(_ pid: pid_t) {
+        guard pid != getpid(), observers[pid] == nil else { return }
+        let observer = AppObserver(pid: pid) { [weak self] event in self?.handle(event) }
+        guard let observer else { return }
+        observers[pid] = observer
+        observer.windows.forEach(adopt)
+    }
+
+    func detach(_ pid: pid_t) {
+        observers.removeValue(forKey: pid)?.stop()
+        for window in windows.values where window.pid == pid {
+            release(window.element)
+        }
+    }
+
+    func reportFrontmostFocus() {
+        guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
+              let element = observers[pid]?.focusedWindow, let id = ids[element] else { return }
+        onCommand(.focusChanged(id))
+    }
+}
