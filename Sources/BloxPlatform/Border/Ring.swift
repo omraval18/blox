@@ -58,6 +58,11 @@ final class Ring {
         panel.order(.above, relativeTo: Int(windowNumber))
     }
 
+    /// Puts the ring back above its window after the app reordered its windows.
+    func raise(above windowNumber: UInt32) {
+        panel.order(.above, relativeTo: Int(windowNumber))
+    }
+
     func move(to frame: CGRect) {
         windowFrame = frame
         layout()

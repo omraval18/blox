@@ -34,7 +34,10 @@ extension WindowSystem {
         case let .destroyed(element), let .minimized(element): release(element)
         case let .focused(element):
             adopt(element)
-            ids[element].map { onCommand(.focusChanged($0)) }
+            ids[element].map {
+                onCommand(.focusChanged($0))
+                restackBorder($0)
+            }
         }
     }
 }

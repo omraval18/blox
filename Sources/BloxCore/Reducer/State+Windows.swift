@@ -13,7 +13,7 @@ extension State {
             } else {
                 workspace.insertTiled(id)
             }
-            if target == current {
+            if target == current || workspace.focused == nil {
                 workspace.focused = id
             }
         }

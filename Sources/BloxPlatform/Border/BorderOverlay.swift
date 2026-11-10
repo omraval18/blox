@@ -36,6 +36,10 @@ final class BorderOverlay {
         }
     }
 
+    func raise(_ id: WindowID) {
+        rings[id]?.raise(above: id.rawValue)
+    }
+
     func remove(_ id: WindowID) {
         rings.removeValue(forKey: id)?.close()
     }

@@ -59,6 +59,9 @@ public final class WindowSystem {
         guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
               let element = observers[pid]?.focusedWindow else { return }
         adopt(element)
-        ids[element].map { onCommand(.focusChanged($0)) }
+        ids[element].map {
+            onCommand(.focusChanged($0))
+            restackBorder($0)
+        }
     }
 }

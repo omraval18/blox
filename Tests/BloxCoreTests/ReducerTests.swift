@@ -10,6 +10,15 @@ struct ReducerTests {
         #expect(state.focusedWindow == id(1))
     }
 
+    @Test func `ruled window on a hidden workspace is focused there`() {
+        var state = makeState()
+        state.settings.rules = ["chat": WindowRule(workspace: "2")]
+        let (next, effects) = run([.windowAppeared(id(1), app: "chat")], from: state)
+        #expect(next.workspaces["2"]?.focused == id(1))
+        #expect(effects.contains(.park(id(1))))
+        #expect(!effects.contains(.focus(id(1))))
+    }
+
     @Test func `duplicate appear is ignored`() {
         let (state, _) = run([.windowAppeared(id(1)), .windowAppeared(id(1))])
         #expect(state.workspaces["1"]?.tiled == [id(1)])
