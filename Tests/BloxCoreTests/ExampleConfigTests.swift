@@ -20,6 +20,7 @@ struct ExampleConfigTests {
         #expect(config.settings.rules["com.google.Chrome"] == WindowRule(workspace: "B"))
         #expect(config.settings.gaps == Gaps(inner: 10, outer: 10))
         #expect(config.settings.border.enabled)
+        #expect(config.workspaceNames.count == 28)
         #expect(config.settings.border.inactiveColors.count == 2)
         #expect(config.settings.animation.curve == Curve(parsing: "wind"))
     }

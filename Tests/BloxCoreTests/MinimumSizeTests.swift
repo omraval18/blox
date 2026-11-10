@@ -74,9 +74,9 @@ struct MinimumSizeTests {
             .windowAppeared(id(2)),
             .switchWorkspace("T"),
         ])
-        #expect(state.overview.map(\.name) == ["1", "B", "T"])
-        #expect(state.overview.map(\.isFocused) == [false, false, true])
-        #expect(state.overview.first?.windows == [id(1)])
-        #expect(state.overview.map(\.isVisible) == [false, false, true])
+        #expect(state.overview().map(\.name) == ["1", "B", "T"])
+        #expect(state.overview().map(\.isFocused) == [false, false, true])
+        #expect(state.overview().first?.windows == [id(1)])
+        #expect(state.overview().map(\.isVisible) == [false, false, true])
     }
 }

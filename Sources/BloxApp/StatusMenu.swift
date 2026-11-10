@@ -1,7 +1,8 @@
 import AppKit
 import BloxCore
 
-/// The menu bar item: a strip of workspace letters, and a menu listing what is in each.
+/// The menu bar item: the current workspace's name, and a menu listing every workspace with the
+/// apps in it (like AeroSpace's tray).
 /// Rebuilt only when something it shows changes; idle otherwise.
 @MainActor
 final class StatusMenu: NSObject {
@@ -46,11 +47,9 @@ final class StatusMenu: NSObject {
     }
 
     private func rebuild() {
-        let button = item.button
-        button?.image = WorkspaceStrip.image(for: rows.map(\.info))
-        button?.imagePosition = .imageLeft
-        let suffix = (mode == Config.mainMode ? "" : " \(mode)") + (error == nil ? "" : "!")
-        button?.title = rows.isEmpty ? "▦" + suffix : suffix
+        let current = rows.first { $0.info.isFocused }?.info.name ?? "▦"
+        item.button?
+            .title = current + (mode == Config.mainMode ? "" : " · \(mode)") + (error == nil ? "" : " !")
         item.menu = makeMenu()
     }
 
@@ -76,8 +75,8 @@ final class StatusMenu: NSObject {
     }
 
     private func workspaceItem(_ row: WorkspaceRow) -> NSMenuItem {
-        let apps = row.apps.isEmpty ? "empty" : row.apps.joined(separator: ", ")
-        let line = entry("\(row.info.name)   \(apps)", #selector(pick(_:)))
+        let apps = row.apps.isEmpty ? "" : " — " + row.apps.joined(separator: ", ")
+        let line = entry(row.info.name + apps, #selector(pick(_:)))
         line.representedObject = row.info.name
         line.state = row.info.isFocused ? .on : .off
         return line

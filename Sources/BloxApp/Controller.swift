@@ -90,7 +90,7 @@ final class Controller {
     }
 
     private func workspaceRows() -> [WorkspaceRow] {
-        state.overview.map { info in
+        state.overview(including: config.workspaceNames).map { info in
             var seen = Set<String>()
             let apps = info.windows.compactMap { system.appName(of: $0) }.filter { seen.insert($0).inserted }
             return WorkspaceRow(info: info, apps: apps)
