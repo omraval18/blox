@@ -49,6 +49,7 @@ final class Controller {
         state = next
         system.settings = next.settings
         system.execute(effects)
+        system.setFocused(next.focusedWindow)
         if next.mode != previousMode {
             registerBindings()
         }

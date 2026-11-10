@@ -35,6 +35,11 @@ public struct Config: Equatable, Sendable {
         case ("animation", "enabled"): settings.animation.enabled = try flag(entry)
         case ("animation", "duration"): settings.animation.duration = try number(entry, in: 0.05 ... 1)
         case ("animation", "curve"): settings.animation.curve = try curve(entry, curves)
+        case ("border", "enabled"): settings.border.enabled = try flag(entry)
+        case ("border", "width"): settings.border.width = try number(entry, in: 1 ... 20)
+        case ("border", "radius"): settings.border.radius = try number(entry, in: 0 ... 40)
+        case ("border", "angle"): settings.border.angle = try number(entry, in: 0 ... 360)
+        case ("border", "colors"): settings.border.colors = try colors(entry)
         case ("rules", _): settings.rules[entry.key] = try rule(entry)
         default:
             guard let mode = Self.modeName(forTable: table) else {

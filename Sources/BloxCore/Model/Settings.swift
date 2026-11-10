@@ -6,6 +6,7 @@ public struct Settings: Equatable, Sendable {
     /// Window rules keyed by app bundle identifier.
     public var rules: [String: WindowRule] = [:]
     public var mouseFollowsFocus = false
+    public var border = BorderSettings()
 
     public init() {}
 }

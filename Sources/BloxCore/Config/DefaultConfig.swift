@@ -14,6 +14,14 @@ public extension Config {
     [focus]
     mouse-follows = false
 
+    # Ring around the focused window. Two or more colors make a gradient.
+    [border]
+    enabled = false
+    width = 3
+    radius = 12
+    colors = "33ccff 00ff99"
+    angle = 45
+
     # Window movement animation. Pick a style, or set duration and curve yourself.
     # styles: snappy fast hyprland end4 ml4w wind smooth circ quart overshoot bounce
     [animation]

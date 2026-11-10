@@ -22,6 +22,12 @@ enum Displays {
         }
     }
 
+    /// Converts a top-left-origin rect (Accessibility space) to AppKit's bottom-left space.
+    static func appKitRect(_ rect: CGRect) -> CGRect {
+        let height = NSScreen.screens.first?.frame.height ?? 0
+        return CGRect(x: rect.minX, y: height - rect.maxY, width: rect.width, height: rect.height)
+    }
+
     /// Bottom-right corner of all screens combined: where hidden windows are parked.
     static func parkingPoint() -> CGPoint {
         let height = NSScreen.screens.first?.frame.height ?? 0

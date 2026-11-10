@@ -12,7 +12,16 @@ public final class WindowSystem {
     var parked: [WindowID: CGRect] = [:]
     let animator = FrameAnimator()
     /// Kept current by the app after every state change; read for animation and cursor behaviour.
-    public var settings = Settings()
+    public var settings = Settings() {
+        didSet {
+            guard settings.border != oldValue.border else { return }
+            border.apply(settings.border)
+            syncBorder()
+        }
+    }
+
+    let border = BorderOverlay()
+    var focusedID: WindowID?
     private var tokens: [any NSObjectProtocol] = []
 
     public init(onCommand: @escaping @MainActor (Command) -> Void) {
@@ -20,6 +29,8 @@ public final class WindowSystem {
     }
 
     public func start() {
+        animator.onFrame = { [weak self] id, frame in self?.followBorder(id, frame) }
+        border.apply(settings.border)
         onCommand(.monitorsChanged(Displays.monitors()))
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
             attach(app.processIdentifier)

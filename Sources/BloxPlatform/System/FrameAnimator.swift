@@ -20,6 +20,8 @@ final class FrameAnimator: NSObject {
     private var tracks: [WindowID: Track] = [:]
     private var current: [WindowID: CGRect] = [:]
     private var link: CADisplayLink?
+    /// Called whenever a window's frame is set, so overlays can follow it.
+    var onFrame: (@MainActor (WindowID, CGRect) -> Void)?
 
     func move(_ window: AXWindow, to frame: CGRect, using settings: AnimationSettings) {
         let id = window.id
@@ -28,6 +30,7 @@ final class FrameAnimator: NSObject {
             tracks.removeValue(forKey: id)
             window.setFrame(frame)
             current[id] = frame
+            onFrame?(id, frame)
             return
         }
         tracks[id] = Track(
@@ -37,6 +40,11 @@ final class FrameAnimator: NSObject {
             start: CACurrentMediaTime(),
             settings: settings,
         )
+    }
+
+    /// The frame last set (mid-animation: the interpolated one).
+    func frame(of id: WindowID) -> CGRect? {
+        current[id]
     }
 
     /// Where the window is heading (or sits), without asking the app.
@@ -71,6 +79,7 @@ final class FrameAnimator: NSObject {
             guard progress < 1 else {
                 track.window.setFrame(track.to)
                 current[id] = track.to
+                onFrame?(id, track.to)
                 tracks.removeValue(forKey: id)
                 continue
             }
@@ -78,6 +87,7 @@ final class FrameAnimator: NSObject {
             let frame = track.from.interpolated(to: track.to, progress: eased)
             track.window.setStep(frame, resizing: track.from.size != track.to.size)
             current[id] = frame
+            onFrame?(id, frame)
         }
         if tracks.isEmpty {
             link?.invalidate()

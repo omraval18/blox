@@ -29,6 +29,15 @@ extension Config {
         return style
     }
 
+    /// One or more hex colors separated by spaces, e.g. `"33ccff 00ff99"`.
+    func colors(_ entry: TOMLEntry) throws -> [RGBA] {
+        let colors = (entry.value.string?.split(separator: " ") ?? []).map { RGBA(hex: String($0)) }
+        guard !colors.isEmpty, !colors.contains(nil) else {
+            throw ConfigError(line: entry.line, message: "colors must be hex values like \"33ccff 00ff99\"")
+        }
+        return colors.compactMap(\.self)
+    }
+
     /// A custom curve by name, else a preset name or four numbers.
     func curve(_ entry: TOMLEntry, _ custom: [String: Curve]) throws -> Curve {
         guard let text = entry.value.string, let curve = custom[text] ?? Curve(parsing: text) else {
