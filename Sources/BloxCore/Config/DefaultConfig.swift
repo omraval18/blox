@@ -11,11 +11,21 @@ public extension Config {
     default = "dwindle"   # dwindle | primary | monocle
     ratio = 0.5
 
-    # Window movement animation. Off by default; on, windows glide to their new place.
+    [focus]
+    mouse-follows = false
+
+    # Window movement animation. Pick a style, or set duration and curve yourself.
+    # styles: snappy fast hyprland end4 ml4w wind smooth circ quart overshoot bounce
     [animation]
     enabled = false
     duration = 0.18
-    curve = "snappy"   # linear | ease-out | ease-in-out | snappy | "x1 y1 x2 y2"
+    curve = "snappy"   # a preset, a [curves] name, or "x1 y1 x2 y2"
+
+    # Your own bezier curves, as in Hyprland: name = "x1 y1 x2 y2"
+    [curves]
+
+    # Per-app rules by bundle id: "workspace <name>" and/or "float"
+    [rules]
 
     [bindings]
     "alt-h" = "focus left"

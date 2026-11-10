@@ -1,10 +1,13 @@
 import AppKit
+import BloxCore
 
 /// Menu bar item with the few actions that matter. Created once, idle until clicked.
 @MainActor
 final class StatusMenu: NSObject {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let errorItem = NSMenuItem()
+    private var mode = Config.mainMode
+    private var hasError = false
     private let onReload: @MainActor () -> Void
     private let onOpenConfig: @MainActor () -> Void
 
@@ -28,7 +31,18 @@ final class StatusMenu: NSObject {
     func setError(_ message: String?) {
         errorItem.title = message.map { "Config error: \($0)" } ?? ""
         errorItem.isHidden = message == nil
-        item.button?.title = message == nil ? "▦" : "▦!"
+        hasError = message != nil
+        refreshTitle()
+    }
+
+    /// The icon shows the active mode, so it is obvious when keys are rebound (e.g. `resize`).
+    func setMode(_ name: String) {
+        mode = name
+        refreshTitle()
+    }
+
+    private func refreshTitle() {
+        item.button?.title = "▦" + (mode == Config.mainMode ? "" : " \(mode)") + (hasError ? "!" : "")
     }
 
     private func entry(_ title: String, _ action: Selector) -> NSMenuItem {

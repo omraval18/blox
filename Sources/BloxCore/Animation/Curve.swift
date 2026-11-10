@@ -3,15 +3,6 @@
 public struct Curve: Equatable, Sendable {
     public let x1, y1, x2, y2: Double
 
-    public static let linear = Self(0, 0, 1, 1)
-    public static let easeOut = Self(0, 0, 0.58, 1)
-    public static let easeInOut = Self(0.42, 0, 0.58, 1)
-    public static let snappy = Self(0.2, 0.8, 0.2, 1)
-
-    private static let presets: [String: Self] = [
-        "linear": linear, "ease-out": easeOut, "ease-in-out": easeInOut, "snappy": snappy,
-    ]
-
     init(_ x1: Double, _ y1: Double, _ x2: Double, _ y2: Double) {
         (self.x1, self.y1, self.x2, self.y2) = (x1, y1, x2, y2)
     }

@@ -2,17 +2,14 @@
 public func reduce(_ state: State, _ command: Command) -> (State, [Effect]) {
     var next = state
     next.apply(command)
-    var effects = PlacementDiff.effects(from: state.placements(), to: next.placements())
-    if case .focusChanged = command {} else if let focus = next.focusedWindow, focus != state.focusedWindow {
-        effects.append(.focus(focus))
-    }
-    return (next, effects)
+    let layout = PlacementDiff.effects(from: state.placements(), to: next.placements())
+    return (next, layout + ExtraEffects.effects(for: command, from: state, to: next))
 }
 
 extension State {
     mutating func apply(_ command: Command) {
         switch command {
-        case let .windowAppeared(id): addWindow(id)
+        case let .windowAppeared(id, app): addWindow(id, app: app)
         case let .windowDisappeared(id): removeWindow(id)
         case let .focusChanged(id): setFocus(id)
         case let .monitorsChanged(monitors): applyMonitors(monitors)
@@ -20,11 +17,17 @@ extension State {
         case let .move(direction): moveNeighbor(direction)
         case let .switchWorkspace(name): showWorkspace(name)
         case let .moveToWorkspace(name): sendFocusedWindow(to: name)
+        case .workspaceBackAndForth: previousWorkspace.map { showWorkspace($0) }
+        case .moveWorkspaceToMonitor: swapWithNextMonitor()
         case let .setLayout(kind): updateFocused { $0.layout = kind }
         case let .resize(delta): updateFocused { $0.ratio = min(max($0.ratio + delta, 0.1), 0.9) }
+        case .balance: updateFocused { [ratio = settings.defaultRatio] in $0.ratio = ratio }
         case .toggleFloating: toggleFloatingFocused()
-        case .retile: break
+        case .toggleFullscreen: toggleFullscreenFocused()
+        case let .setMode(name): mode = name
+        case let .setAnimation(name): applyAnimation(named: name)
         case let .updateSettings(settings): self.settings = settings
+        case .exec, .retile, .reloadConfig: break
         }
     }
 }

@@ -3,6 +3,9 @@ public struct State: Equatable, Sendable {
     public var monitors: [Monitor] = []
     public var workspaces: [String: Workspace] = [:]
     public var focusedMonitor = 0
+    /// Active binding set (`main` unless a mode such as `resize` was entered).
+    public var mode = "main"
+    var previousWorkspace: String?
 
     public init(settings: Settings = Settings()) {
         self.settings = settings

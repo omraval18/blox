@@ -25,6 +25,9 @@ extension State {
             for id in workspace.floating {
                 result[id] = .free
             }
+            if let id = workspace.fullscreen, workspace.tiled.contains(id) {
+                result[id] = .frame(monitor.frame)
+            }
         }
         return result
     }

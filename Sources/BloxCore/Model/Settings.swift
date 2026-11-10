@@ -1,18 +1,11 @@
 public struct Settings: Equatable, Sendable {
-    public var gaps: Gaps
-    public var defaultLayout: LayoutKind
-    public var defaultRatio: Double
-    public var animation: AnimationSettings
+    public var gaps = Gaps()
+    public var defaultLayout = LayoutKind.dwindle
+    public var defaultRatio = 0.5
+    public var animation = AnimationSettings()
+    /// Window rules keyed by app bundle identifier.
+    public var rules: [String: WindowRule] = [:]
+    public var mouseFollowsFocus = false
 
-    public init(
-        gaps: Gaps = Gaps(),
-        defaultLayout: LayoutKind = .dwindle,
-        defaultRatio: Double = 0.5,
-        animation: AnimationSettings = AnimationSettings(),
-    ) {
-        self.animation = animation
-        self.gaps = gaps
-        self.defaultLayout = defaultLayout
-        self.defaultRatio = defaultRatio
-    }
+    public init() {}
 }

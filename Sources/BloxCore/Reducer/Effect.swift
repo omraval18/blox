@@ -8,4 +8,6 @@ public enum Effect: Equatable, Sendable {
     /// Restore the frame remembered by `park`.
     case unpark(WindowID)
     case focus(WindowID)
+    /// Run a shell command, fire and forget.
+    case run(String)
 }

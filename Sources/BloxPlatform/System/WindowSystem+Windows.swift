@@ -1,3 +1,4 @@
+import AppKit
 import ApplicationServices
 import BloxCore
 
@@ -7,7 +8,8 @@ extension WindowSystem {
         windows[window.id] = window
         ids[element] = window.id
         observers[window.pid]?.watch(element)
-        onCommand(.windowAppeared(window.id))
+        let app = NSRunningApplication(processIdentifier: window.pid)?.bundleIdentifier ?? ""
+        onCommand(.windowAppeared(window.id, app: app))
     }
 
     func release(_ element: AXUIElement) {

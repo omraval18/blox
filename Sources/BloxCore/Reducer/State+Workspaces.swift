@@ -1,12 +1,28 @@
 extension State {
     /// Shows `name` on the focused monitor, or focuses the monitor already showing it.
     mutating func showWorkspace(_ name: String) {
+        let current = focusedWorkspaceName
+        defer {
+            if current != name {
+                previousWorkspace = current
+            }
+        }
         if let index = monitors.firstIndex(where: { $0.workspace == name }) {
             focusedMonitor = index
         } else if monitors.indices.contains(focusedMonitor) {
             update(name) { _ in }
             monitors[focusedMonitor].workspace = name
         }
+    }
+
+    /// Swaps the focused monitor's workspace with the next monitor's; focus goes with it.
+    mutating func swapWithNextMonitor() {
+        guard monitors.count > 1 else { return }
+        let next = (focusedMonitor + 1) % monitors.count
+        let name = monitors[focusedMonitor].workspace
+        monitors[focusedMonitor].workspace = monitors[next].workspace
+        monitors[next].workspace = name
+        focusedMonitor = next
     }
 
     mutating func sendFocusedWindow(to name: String) {

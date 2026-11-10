@@ -39,6 +39,11 @@ final class FrameAnimator: NSObject {
         )
     }
 
+    /// Where the window is heading (or sits), without asking the app.
+    func target(of id: WindowID) -> CGRect? {
+        tracks[id]?.to ?? current[id]
+    }
+
     func record(_ id: WindowID, _ frame: CGRect) {
         current[id] = frame
     }

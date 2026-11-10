@@ -9,6 +9,6 @@ public extension State {
             let counts = "\($0.tiled.count) tiled, \($0.floating.count) floating"
             return "  workspace \($0.name): \(counts), \($0.layout.rawValue)"
         }
-        return (screens + spaces).joined(separator: "\n")
+        return (["mode: \(mode)"] + screens + spaces).joined(separator: "\n")
     }
 }

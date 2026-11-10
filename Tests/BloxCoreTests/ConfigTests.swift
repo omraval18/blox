@@ -5,8 +5,8 @@ struct ConfigTests {
     @Test func `default config is valid`() throws {
         let config = try Config(parsing: Config.defaultText)
         #expect(config.settings.gaps == Gaps(inner: 8, outer: 8))
-        #expect(config.bindings.count == 22)
-        #expect(config.bindings.first?.command == .focus(.left))
+        #expect(config.modes["main"]?.count == 22)
+        #expect(config.modes["main"]?.first?.commands == [.focus(.left)])
     }
 
     @Test func `empty config uses defaults`() throws {
@@ -15,7 +15,7 @@ struct ConfigTests {
 
     @Test func `comments and quoted keys parse`() throws {
         let config = try Config(parsing: "[bindings]\n\"alt-#\" = \"retile\" # trailing\n")
-        #expect(config.bindings.first?.chord == Chord(parsing: "alt-#"))
+        #expect(config.modes["main"]?.first?.chord == Chord(parsing: "alt-#"))
     }
 
     @Test(arguments: [
@@ -40,7 +40,7 @@ struct ConfigTests {
     @Test func `chord parsing`() {
         #expect(Chord(parsing: "alt-shift-h")?.modifiers == [.alt, .shift])
         #expect(Chord(parsing: "ctrl--")?.key == "-")
-        #expect(Chord(parsing: "h") == nil)
+        #expect(Chord(parsing: "h")?.modifiers == [])
         #expect(Chord(parsing: "alt-alt-h") == nil)
         #expect(Chord(parsing: "alt-") == nil)
     }

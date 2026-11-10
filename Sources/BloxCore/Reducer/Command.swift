@@ -1,6 +1,6 @@
 public enum Command: Equatable, Sendable {
     // Events reported by the OS.
-    case windowAppeared(WindowID)
+    case windowAppeared(WindowID, app: String = "")
     case windowDisappeared(WindowID)
     case focusChanged(WindowID)
     case monitorsChanged([Monitor])
@@ -9,9 +9,17 @@ public enum Command: Equatable, Sendable {
     case move(Direction)
     case switchWorkspace(String)
     case moveToWorkspace(String)
+    case workspaceBackAndForth
+    case moveWorkspaceToMonitor
     case setLayout(LayoutKind)
     case resize(Double)
+    case balance
     case toggleFloating
+    case toggleFullscreen
+    case setMode(String)
+    case setAnimation(String)
+    case exec(String)
     case retile
+    case reloadConfig
     case updateSettings(Settings)
 }

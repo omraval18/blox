@@ -25,6 +25,7 @@ final class Controller {
         _ = menu
         _ = reloadConfig()
         state = State(settings: config.settings)
+        system.settings = state.settings
         system.start()
         watcher = ConfigWatcher(directory: configFile.directory) { [weak self] in _ = self?.reloadConfig() }
         server = startServer()
@@ -36,9 +37,21 @@ final class Controller {
     }
 
     func dispatch(_ command: Command) {
+        if case .reloadConfig = command {
+            _ = reloadConfig()
+            return
+        }
+        if case let .setMode(name) = command, config.modes[name] == nil {
+            return
+        }
+        let previousMode = state.mode
         let (next, effects) = reduce(state, command)
         state = next
+        system.settings = next.settings
         system.execute(effects)
+        if next.mode != previousMode {
+            registerBindings()
+        }
     }
 
     var summary: String {
@@ -55,11 +68,22 @@ final class Controller {
             return "\(error)"
         }
         menu.setError(nil)
-        system.animation = config.settings.animation
+        if config.modes[state.mode] == nil {
+            state.mode = Config.mainMode
+        }
         dispatch(.updateSettings(config.settings))
-        let refused = hotkeys.register(config.bindings.map(\.chord))
-        refused.forEach { log.error("hotkey unavailable: \($0.key)") }
+        registerBindings()
         return nil
+    }
+
+    private func registerBindings() {
+        let refused = hotkeys.register(activeBindings.map(\.chord))
+        refused.forEach { log.error("hotkey unavailable: \($0.key)") }
+        menu.setMode(state.mode)
+    }
+
+    private var activeBindings: [Config.Binding] {
+        config.modes[state.mode] ?? []
     }
 
     private func openConfig() {
@@ -67,8 +91,8 @@ final class Controller {
     }
 
     private func runBinding(_ index: Int) {
-        guard config.bindings.indices.contains(index) else { return }
-        dispatch(config.bindings[index].command)
+        guard activeBindings.indices.contains(index) else { return }
+        activeBindings[index].commands.forEach(dispatch)
     }
 
     private func startServer() -> SocketServer? {

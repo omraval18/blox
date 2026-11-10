@@ -9,7 +9,8 @@ extension WindowSystem {
             case let .place(id, frame): place(id, frame)
             case let .park(id): park(id)
             case let .unpark(id): unpark(id)
-            case let .focus(id): windows[id]?.raise()
+            case let .focus(id): focus(id)
+            case let .run(line): Shell.run(line)
             }
         }
     }
@@ -21,10 +22,17 @@ extension WindowSystem {
         }
     }
 
+    private func focus(_ id: WindowID) {
+        guard let window = windows[id] else { return }
+        window.raise()
+        guard settings.mouseFollowsFocus, let frame = animator.target(of: id) ?? window.frame else { return }
+        CGWarpMouseCursorPosition(CGPoint(x: frame.midX, y: frame.midY))
+    }
+
     private func place(_ id: WindowID, _ frame: CGRect) {
         parked.removeValue(forKey: id)
         guard let window = windows[id] else { return }
-        animator.move(window, to: frame, using: animation)
+        animator.move(window, to: frame, using: settings.animation)
     }
 
     private func park(_ id: WindowID) {

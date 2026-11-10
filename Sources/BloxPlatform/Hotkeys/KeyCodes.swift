@@ -22,7 +22,9 @@ enum KeyCodes {
 
     private static let aliases = [
         "-": "minus", "=": "equal", ",": "comma", ".": "period", "/": "slash", ";": "semicolon",
-        "'": "quote", "[": "leftbracket", "]": "rightbracket", "\\": "backslash", "`": "grave",
+        "'": "quote", "enter": "return", "esc": "escape", "backspace": "delete", "[": "leftbracket",
+        "]": "rightbracket",
+        "\\": "backslash", "`": "grave",
     ]
 
     private static let table: [String: UInt32] = [

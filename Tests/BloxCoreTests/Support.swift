@@ -9,7 +9,10 @@ func id(_ value: UInt32) -> WindowID {
 
 /// A state with one monitor showing workspace "1".
 func makeState(gaps: Gaps = Gaps(), layout: LayoutKind = .dwindle) -> State {
-    let state = State(settings: Settings(gaps: gaps, defaultLayout: layout))
+    var settings = Settings()
+    settings.gaps = gaps
+    settings.defaultLayout = layout
+    let state = State(settings: settings)
     return reduce(state, .monitorsChanged([Monitor(id: 1, frame: screen)])).0
 }
 

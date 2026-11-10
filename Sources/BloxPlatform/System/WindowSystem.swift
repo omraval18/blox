@@ -11,8 +11,8 @@ public final class WindowSystem {
     var ids: [AXUIElement: WindowID] = [:]
     var parked: [WindowID: CGRect] = [:]
     let animator = FrameAnimator()
-    /// Set by the app whenever the config changes.
-    public var animation = AnimationSettings()
+    /// Kept current by the app after every state change; read for animation and cursor behaviour.
+    public var settings = Settings()
     private var tokens: [any NSObjectProtocol] = []
 
     public init(onCommand: @escaping @MainActor (Command) -> Void) {
