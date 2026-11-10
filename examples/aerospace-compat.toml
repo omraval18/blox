@@ -5,8 +5,8 @@
 # flatten-workspace-tree, close-all-windows-but-current, accordion padding.
 
 [gaps]
-inner = 18
-outer = 0
+inner = 12
+outer = 8
 
 [layout]
 default = "dwindle"
@@ -16,13 +16,14 @@ ratio = 0.5
 [focus]
 mouse-follows = true
 
-# Focus ring (the signature Hyprland look). Colors: cyan to green at 45 degrees.
-# Try: colors = "e5b9c6 c293a3" (soft pink), "ff6ac1 8be9fd" (neon), "ffffff" (plain white).
+# Focus ring: a thin, translucent hairline (last two hex digits are opacity). Radius matches
+# macOS windows. Set enabled = false to turn it off. Bolder looks to try:
+#   colors = "33ccff 00ff99" (cyan to green), "e5b9c6 c293a3" (soft pink), "ff6ac1 8be9fd" (neon)
 [border]
 enabled = true
-width = 3
-radius = 12
-colors = "33ccff 00ff99"
+width = 2
+radius = 20
+colors = "a78bfa99 60a5fa99"
 angle = 45
 
 # Animation. Styles come from popular Hyprland configs. Press alt-shift-period to enter the

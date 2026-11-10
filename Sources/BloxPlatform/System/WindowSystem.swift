@@ -30,6 +30,7 @@ public final class WindowSystem {
 
     public func start() {
         animator.onFrame = { [weak self] id, frame in self?.followBorder(id, frame) }
+        animator.onSettled = { [weak self] window, frame in self?.checkMinimum(window, frame) }
         border.apply(settings.border)
         onCommand(.monitorsChanged(Displays.monitors()))
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {

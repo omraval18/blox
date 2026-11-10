@@ -1,8 +1,16 @@
 import CoreGraphics
 
 /// Splits `area` into `count` frames. Gaps and pixel alignment are applied by `Tiling`.
+/// `minimums` are the smallest sizes windows will accept (empty or zero when unknown); layouts
+/// use them to avoid splits that would make windows overlap.
 protocol LayoutAlgorithm: Sendable {
-    func frames(count: Int, in area: CGRect, ratio: Double) -> [CGRect]
+    func frames(count: Int, in area: CGRect, ratio: Double, minimums: [CGSize]) -> [CGRect]
+}
+
+extension LayoutAlgorithm {
+    func frames(count: Int, in area: CGRect, ratio: Double) -> [CGRect] {
+        frames(count: count, in: area, ratio: ratio, minimums: [])
+    }
 }
 
 extension CGRect {

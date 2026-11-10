@@ -1,3 +1,5 @@
+import CoreGraphics
+
 extension State {
     /// Adds a new window, honouring any rule for its app. Only a window added to the
     /// workspace you are on takes focus.
@@ -18,6 +20,7 @@ extension State {
     }
 
     mutating func removeWindow(_ id: WindowID) {
+        minSizes.removeValue(forKey: id)
         guard let name = workspaceName(containing: id) else { return }
         update(name) { $0.remove(id) }
     }
@@ -27,6 +30,16 @@ extension State {
         guard let name = workspaceName(containing: id) else { return }
         update(name) { $0.focused = id }
         showWorkspace(name)
+    }
+
+    /// Remembers a window's minimum size (never shrinks it, so layouts settle).
+    mutating func learnMinSize(_ id: WindowID, _ size: CGSize) {
+        guard workspaceName(containing: id) != nil else { return }
+        let known = minSizes[id] ?? .zero
+        let merged = CGSize(width: max(known.width, size.width), height: max(known.height, size.height))
+        if merged != known {
+            minSizes[id] = merged
+        }
     }
 
     mutating func toggleFloatingFocused() {

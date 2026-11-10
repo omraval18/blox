@@ -23,7 +23,7 @@ extension State {
         if workspace.layout == .monocle {
             return Self.cycle(workspace.tiled, from: index, direction)
         }
-        let frames = Tiling.frames(workspace, in: monitors[focusedMonitor].frame, gaps: settings.gaps)
+        let frames = tileFrames(workspace, in: monitors[focusedMonitor].frame)
         return Self.nearest(to: index, in: frames, direction).map { workspace.tiled[$0] }
     }
 

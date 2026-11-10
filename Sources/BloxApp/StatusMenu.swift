@@ -1,54 +1,96 @@
 import AppKit
 import BloxCore
 
-/// Menu bar item with the few actions that matter. Created once, idle until clicked.
+/// The menu bar item: a strip of workspace letters, and a menu listing what is in each.
+/// Rebuilt only when something it shows changes; idle otherwise.
 @MainActor
 final class StatusMenu: NSObject {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let errorItem = NSMenuItem()
-    private var mode = Config.mainMode
-    private var hasError = false
     private let onReload: @MainActor () -> Void
     private let onOpenConfig: @MainActor () -> Void
+    private let onSwitch: @MainActor (String) -> Void
+    private var rows: [WorkspaceRow] = []
+    private var mode = Config.mainMode
+    private var error: String?
 
-    init(onReload: @escaping @MainActor () -> Void, onOpenConfig: @escaping @MainActor () -> Void) {
+    init(
+        onReload: @escaping @MainActor () -> Void,
+        onOpenConfig: @escaping @MainActor () -> Void,
+        onSwitch: @escaping @MainActor (String) -> Void,
+    ) {
         self.onReload = onReload
         self.onOpenConfig = onOpenConfig
+        self.onSwitch = onSwitch
         super.init()
-        item.button?.title = "▦"
-        let menu = NSMenu()
-        errorItem.isHidden = true
-        errorItem.isEnabled = false
-        menu.addItem(errorItem)
-        menu.addItem(entry("Reload Config", #selector(reload)))
-        menu.addItem(entry("Open Config", #selector(openConfig)))
-        menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Blox", action: #selector(NSApplication.terminate), keyEquivalent: "q")
-        item.menu = menu
+        rebuild()
+    }
+
+    func update(rows newRows: [WorkspaceRow]) {
+        guard newRows != rows else { return }
+        rows = newRows
+        rebuild()
     }
 
     /// Shows a config problem in the menu and flags the icon; `nil` clears it.
     func setError(_ message: String?) {
-        errorItem.title = message.map { "Config error: \($0)" } ?? ""
-        errorItem.isHidden = message == nil
-        hasError = message != nil
-        refreshTitle()
+        guard message != error else { return }
+        error = message
+        rebuild()
     }
 
-    /// The icon shows the active mode, so it is obvious when keys are rebound (e.g. `resize`).
+    /// The bar shows the active mode, so it is obvious when keys are rebound (e.g. `resize`).
     func setMode(_ name: String) {
+        guard name != mode else { return }
         mode = name
-        refreshTitle()
+        rebuild()
     }
 
-    private func refreshTitle() {
-        item.button?.title = "▦" + (mode == Config.mainMode ? "" : " \(mode)") + (hasError ? "!" : "")
+    private func rebuild() {
+        let button = item.button
+        button?.image = WorkspaceStrip.image(for: rows.map(\.info))
+        button?.imagePosition = .imageLeft
+        let suffix = (mode == Config.mainMode ? "" : " \(mode)") + (error == nil ? "" : "!")
+        button?.title = rows.isEmpty ? "▦" + suffix : suffix
+        item.menu = makeMenu()
+    }
+
+    private func makeMenu() -> NSMenu {
+        let menu = NSMenu()
+        if let error {
+            let line = NSMenuItem(title: "Config error: \(error)", action: nil, keyEquivalent: "")
+            line.isEnabled = false
+            menu.addItem(line)
+            menu.addItem(.separator())
+        }
+        for row in rows {
+            menu.addItem(workspaceItem(row))
+        }
+        if !rows.isEmpty {
+            menu.addItem(.separator())
+        }
+        menu.addItem(entry("Reload Config", #selector(reload)))
+        menu.addItem(entry("Open Config", #selector(openConfig)))
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Quit Blox", action: #selector(NSApplication.terminate), keyEquivalent: "q")
+        return menu
+    }
+
+    private func workspaceItem(_ row: WorkspaceRow) -> NSMenuItem {
+        let apps = row.apps.isEmpty ? "empty" : row.apps.joined(separator: ", ")
+        let line = entry("\(row.info.name)   \(apps)", #selector(pick(_:)))
+        line.representedObject = row.info.name
+        line.state = row.info.isFocused ? .on : .off
+        return line
     }
 
     private func entry(_ title: String, _ action: Selector) -> NSMenuItem {
         let entry = NSMenuItem(title: title, action: action, keyEquivalent: "")
         entry.target = self
         return entry
+    }
+
+    @objc private func pick(_ sender: NSMenuItem) {
+        (sender.representedObject as? String).map(onSwitch)
     }
 
     @objc private func reload() {

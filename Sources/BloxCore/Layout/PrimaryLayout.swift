@@ -2,7 +2,7 @@ import CoreGraphics
 
 /// One primary window on the left, the rest stacked on the right.
 struct PrimaryLayout: LayoutAlgorithm {
-    func frames(count: Int, in area: CGRect, ratio: Double) -> [CGRect] {
+    func frames(count: Int, in area: CGRect, ratio: Double, minimums _: [CGSize]) -> [CGRect] {
         guard count > 1 else { return count == 1 ? [area] : [] }
         let (primary, stack) = area.split(ratio: ratio, sideBySide: true)
         let height = stack.height / Double(count - 1)

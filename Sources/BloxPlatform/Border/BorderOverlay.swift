@@ -6,14 +6,14 @@ import QuartzCore
 /// other windows still cover it. It only changes when focus or the window's frame changes.
 @MainActor
 final class BorderOverlay {
-    private let panel: NSPanel
+    private let panel: RingPanel
     private let gradient = CAGradientLayer()
     private let ring = CAShapeLayer()
     private var settings = BorderSettings()
     private var windowFrame = CGRect.zero
 
     init() {
-        panel = NSPanel(
+        panel = RingPanel(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,

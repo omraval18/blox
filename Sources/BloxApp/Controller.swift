@@ -18,6 +18,7 @@ final class Controller {
     private lazy var menu = StatusMenu(
         onReload: { [weak self] in _ = self?.reloadConfig() },
         onOpenConfig: { [weak self] in self?.openConfig() },
+        onSwitch: { [weak self] in self?.dispatch(.switchWorkspace($0)) },
     )
     private lazy var hotkeys = HotkeyCenter { [weak self] in self?.runBinding($0) }
 
@@ -50,6 +51,7 @@ final class Controller {
         system.settings = next.settings
         system.execute(effects)
         system.setFocused(next.focusedWindow)
+        menu.update(rows: workspaceRows())
         if next.mode != previousMode {
             registerBindings()
         }
@@ -85,6 +87,14 @@ final class Controller {
 
     private var activeBindings: [Config.Binding] {
         config.modes[state.mode] ?? []
+    }
+
+    private func workspaceRows() -> [WorkspaceRow] {
+        state.overview.map { info in
+            var seen = Set<String>()
+            let apps = info.windows.compactMap { system.appName(of: $0) }.filter { seen.insert($0).inserted }
+            return WorkspaceRow(info: info, apps: apps)
+        }
     }
 
     private func openConfig() {

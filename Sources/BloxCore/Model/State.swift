@@ -1,3 +1,5 @@
+import CoreGraphics
+
 public struct State: Equatable, Sendable {
     public var settings: Settings
     public var monitors: [Monitor] = []
@@ -6,6 +8,8 @@ public struct State: Equatable, Sendable {
     /// Active binding set (`main` unless a mode such as `resize` was entered).
     public var mode = "main"
     var previousWorkspace: String?
+    /// Smallest size each window has shown it will accept; only ever grows.
+    public internal(set) var minSizes: [WindowID: CGSize] = [:]
 
     public init(settings: Settings = Settings()) {
         self.settings = settings

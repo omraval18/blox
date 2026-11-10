@@ -12,6 +12,11 @@ extension WindowSystem {
         onCommand(.windowAppeared(window.id, app: app))
     }
 
+    /// Localized name of the app owning a window, for the workspace bar.
+    public func appName(of id: WindowID) -> String? {
+        windows[id].flatMap { NSRunningApplication(processIdentifier: $0.pid)?.localizedName }
+    }
+
     func release(_ element: AXUIElement) {
         guard let id = ids.removeValue(forKey: element) else { return }
         windows.removeValue(forKey: id)

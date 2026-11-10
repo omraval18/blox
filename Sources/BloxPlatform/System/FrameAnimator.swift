@@ -22,6 +22,8 @@ final class FrameAnimator: NSObject {
     private var link: CADisplayLink?
     /// Called whenever a window's frame is set, so overlays can follow it.
     var onFrame: (@MainActor (WindowID, CGRect) -> Void)?
+    /// Called once a window has been given its final frame.
+    var onSettled: (@MainActor (AXWindow, CGRect) -> Void)?
 
     func move(_ window: AXWindow, to frame: CGRect, using settings: AnimationSettings) {
         let id = window.id
@@ -31,6 +33,7 @@ final class FrameAnimator: NSObject {
             window.setFrame(frame)
             current[id] = frame
             onFrame?(id, frame)
+            onSettled?(window, frame)
             return
         }
         tracks[id] = Track(
@@ -80,6 +83,7 @@ final class FrameAnimator: NSObject {
                 track.window.setFrame(track.to)
                 current[id] = track.to
                 onFrame?(id, track.to)
+                onSettled?(track.window, track.to)
                 tracks.removeValue(forKey: id)
                 continue
             }

@@ -33,5 +33,5 @@ func workspace(_ layout: LayoutKind, count: UInt32, ratio: Double = 0.5) -> Work
 
 func frames(of state: State) -> [CGRect] {
     let name = state.focusedWorkspaceName ?? ""
-    return state.workspaces[name].map { Tiling.frames($0, in: screen, gaps: state.settings.gaps) } ?? []
+    return state.workspaces[name].map { state.tileFrames($0, in: screen) } ?? []
 }

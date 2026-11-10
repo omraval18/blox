@@ -18,7 +18,7 @@ extension State {
         }
         for monitor in monitors {
             guard let workspace = workspaces[monitor.workspace] else { continue }
-            let frames = Tiling.frames(workspace, in: monitor.frame, gaps: settings.gaps)
+            let frames = tileFrames(workspace, in: monitor.frame)
             for (id, frame) in zip(workspace.tiled, frames) {
                 result[id] = .frame(frame)
             }
