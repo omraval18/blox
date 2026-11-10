@@ -1,0 +1,162 @@
+# Blox config, ported from an AeroSpace setup: same keys, same workspaces, same modes.
+# Hyprland-inspired extras: animation styles, a focus ring, and named bezier curves.
+#
+# Not ported (Blox keeps a flat window list, not nested containers): join-with,
+# flatten-workspace-tree, close-all-windows-but-current, accordion padding.
+
+[gaps]
+inner = 18
+outer = 0
+
+[layout]
+default = "dwindle"
+ratio = 0.5
+
+# Like AeroSpace's on-focus-changed = move-mouse window-lazy-center.
+[focus]
+mouse-follows = true
+
+# Focus ring (the signature Hyprland look). Colors: cyan to green at 45 degrees.
+# Try: colors = "e5b9c6 c293a3" (soft pink), "ff6ac1 8be9fd" (neon), "ffffff" (plain white).
+[border]
+enabled = true
+width = 3
+radius = 12
+colors = "33ccff 00ff99"
+angle = 45
+
+# Animation. Styles come from popular Hyprland configs. Press alt-shift-period to enter the
+# "anim" mode and try them live: 1 snappy, 2 fast, 3 hyprland, 4 end4, 5 ml4w, 6 wind,
+# 7 smooth, 8 circ, 9 quart, o overshoot, b bounce, x off, esc back.
+[animation]
+style = "hyprland"
+
+# Your own beziers, Hyprland-style: name = "x1 y1 x2 y2". Use one with  curve = "<name>"
+# under [animation]. These come straight from configs by end-4, JaKooLit and linuxmobile.
+[curves]
+md3_decel = "0.05 0.7 0.1 1"
+menu_decel = "0.1 1 0 1"
+win_in = "0.1 1.1 0.1 1.1"
+crazyshot = "0.1 1 0.76 0.92"
+slow = "0 0.85 0.3 1"
+
+# App rules by bundle id (AeroSpace's on-window-detected).
+[rules]
+"com.google.Chrome" = "workspace B"
+"com.mitchellh.ghostty" = "workspace T"
+
+[bindings]
+"alt-slash" = "layout dwindle"
+"alt-comma" = "layout monocle"
+"alt-shift-comma" = "layout primary"
+"alt-h" = "focus left"
+"alt-j" = "focus down"
+"alt-k" = "focus up"
+"alt-l" = "focus right"
+"alt-shift-h" = "move left"
+"alt-shift-j" = "move down"
+"alt-shift-k" = "move up"
+"alt-shift-l" = "move right"
+
+"alt-1" = "workspace 1"
+"alt-2" = "workspace 2"
+"alt-3" = "workspace 3"
+"alt-4" = "workspace 4"
+"alt-5" = "workspace 5"
+"alt-6" = "workspace 6"
+"alt-7" = "workspace 7"
+"alt-8" = "workspace 8"
+"alt-9" = "workspace 9"
+"alt-a" = "workspace A"
+"alt-b" = "workspace B"
+"alt-c" = "workspace C"
+"alt-d" = "workspace D"
+"alt-e" = "workspace E"
+"alt-i" = "workspace I"
+"alt-m" = "workspace M"
+"alt-n" = "workspace N"
+"alt-o" = "workspace O"
+"alt-p" = "workspace P"
+"alt-q" = "workspace Q"
+"alt-s" = "workspace S"
+"alt-t" = "workspace T"
+"alt-u" = "workspace U"
+"alt-v" = "workspace V"
+"alt-w" = "workspace W"
+"alt-x" = "workspace X"
+"alt-y" = "workspace Y"
+"alt-z" = "workspace Z"
+
+"alt-shift-1" = "move-to-workspace 1"
+"alt-shift-2" = "move-to-workspace 2"
+"alt-shift-3" = "move-to-workspace 3"
+"alt-shift-4" = "move-to-workspace 4"
+"alt-shift-5" = "move-to-workspace 5"
+"alt-shift-6" = "move-to-workspace 6"
+"alt-shift-7" = "move-to-workspace 7"
+"alt-shift-8" = "move-to-workspace 8"
+"alt-shift-9" = "move-to-workspace 9"
+"alt-shift-a" = "move-to-workspace A"
+"alt-shift-b" = "move-to-workspace B"
+"alt-shift-c" = "move-to-workspace C"
+"alt-shift-d" = "move-to-workspace D"
+"alt-shift-e" = "move-to-workspace E"
+"alt-shift-i" = "move-to-workspace I"
+"alt-shift-m" = "move-to-workspace M"
+"alt-shift-n" = "move-to-workspace N"
+"alt-shift-o" = "move-to-workspace O"
+"alt-shift-p" = "move-to-workspace P"
+"alt-shift-q" = "move-to-workspace Q"
+"alt-shift-s" = "move-to-workspace S"
+"alt-shift-t" = "move-to-workspace T"
+"alt-shift-u" = "move-to-workspace U"
+"alt-shift-v" = "move-to-workspace V"
+"alt-shift-w" = "move-to-workspace W"
+"alt-shift-x" = "move-to-workspace X"
+"alt-shift-y" = "move-to-workspace Y"
+"alt-shift-z" = "move-to-workspace Z"
+
+# Fullscreen + hide dock / exit fullscreen + restore dock
+"alt-shift-f" = "fullscreen ; exec osascript -e 'tell application \"System Events\" to set autohide of dock preferences to true'"
+"alt-shift-g" = "fullscreen ; exec osascript -e 'tell application \"System Events\" to set autohide of dock preferences to false'"
+
+"alt-tab" = "workspace-back-and-forth"
+"alt-shift-tab" = "move-workspace-to-monitor"
+
+"alt-shift-semicolon" = "mode service"
+"alt-shift-r" = "mode resize"
+"alt-shift-period" = "mode anim"
+
+# Resize mode. Blox resizes the main split by ratio: h/k shrink it, l/j grow it.
+[mode.resize]
+h = "resize -0.03"
+j = "resize 0.03"
+k = "resize -0.03"
+l = "resize 0.03"
+b = "balance"
+minus = "resize -0.03"
+equal = "resize 0.03"
+enter = "mode main"
+esc = "mode main"
+
+[mode.service]
+esc = "reload-config ; mode main"
+r = "retile ; mode main"
+f = "toggle-floating ; mode main"
+
+# Animation playground: each key switches the style live, so you can feel the difference.
+[mode.anim]
+"1" = "animation snappy"
+"2" = "animation fast"
+"3" = "animation hyprland"
+"4" = "animation end4"
+"5" = "animation ml4w"
+"6" = "animation wind"
+"7" = "animation smooth"
+"8" = "animation circ"
+"9" = "animation quart"
+o = "animation overshoot"
+b = "animation bounce"
+x = "animation off"
+esc = "mode main"
+enter = "mode main"

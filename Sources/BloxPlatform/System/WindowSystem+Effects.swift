@@ -10,7 +10,7 @@ extension WindowSystem {
             case let .park(id): park(id)
             case let .unpark(id): unpark(id)
             case let .focus(id): focus(id)
-            case let .run(line): Shell.run(line)
+            case let .run(line): run(line)
             }
         }
     }
@@ -19,6 +19,16 @@ extension WindowSystem {
     public func restoreParked() {
         for id in Array(parked.keys) {
             unpark(id)
+        }
+    }
+
+    /// Runs a shell command. Commands such as dock autohide change the usable screen area without
+    /// a notification, so the display geometry is re-read once shortly afterwards.
+    private func run(_ line: String) {
+        Shell.run(line)
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            onCommand(.monitorsChanged(Displays.monitors()))
         }
     }
 
