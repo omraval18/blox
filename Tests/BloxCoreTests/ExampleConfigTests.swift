@@ -18,7 +18,7 @@ struct ExampleConfigTests {
         #expect(main
             .contains { $0.chord == Chord(parsing: "alt-tab") && $0.commands == [.workspaceBackAndForth] })
         #expect(config.settings.rules["com.google.Chrome"] == WindowRule(workspace: "B"))
-        #expect(config.settings.gaps == Gaps(inner: 10, outer: 10))
+        #expect(config.settings.gaps == Gaps(inner: 18, outer: 0))
         #expect(config.settings.border.enabled)
         #expect(config.workspaceNames.count == 28)
         #expect(config.settings.border.inactiveColors.count == 2)

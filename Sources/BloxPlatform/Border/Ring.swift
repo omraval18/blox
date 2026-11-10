@@ -2,7 +2,8 @@ import AppKit
 import BloxCore
 import QuartzCore
 
-/// One click-through ring hugging one window, stacked directly above that window so menus and
+/// One click-through ring along the inside edge of one window, stacked directly above that window so menus
+/// and
 /// other windows still cover it. It changes only when its window moves or its style does.
 @MainActor
 final class Ring {
@@ -66,10 +67,11 @@ final class Ring {
         panel.orderOut(nil)
     }
 
+    /// The ring is drawn inside the window's edge, as Hyprland does, so it never depends on gaps and
+    /// stays visible on windows that touch the screen edge.
     private func layout() {
-        let outer = windowFrame.insetBy(dx: -style.width, dy: -style.width)
-        panel.setFrame(Displays.appKitRect(outer), display: false)
-        let bounds = CGRect(origin: .zero, size: outer.size)
+        panel.setFrame(Displays.appKitRect(windowFrame), display: false)
+        let bounds = CGRect(origin: .zero, size: windowFrame.size)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         gradient.frame = bounds
@@ -81,8 +83,8 @@ final class Ring {
     private func ringPath(in bounds: CGRect) -> CGPath {
         let inner = bounds.insetBy(dx: style.width, dy: style.width)
         let path = CGMutablePath()
-        let outerRadius = clamp(style.radius + style.width, bounds)
-        let innerRadius = clamp(style.radius, inner)
+        let outerRadius = clamp(style.radius, bounds)
+        let innerRadius = clamp(style.radius - style.width, inner)
         path.addRoundedRect(in: bounds, cornerWidth: outerRadius, cornerHeight: outerRadius)
         path.addRoundedRect(in: inner, cornerWidth: innerRadius, cornerHeight: innerRadius)
         return path

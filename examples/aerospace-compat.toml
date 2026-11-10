@@ -4,11 +4,11 @@
 # Not ported (Blox keeps a flat window list, not nested containers): join-with,
 # flatten-workspace-tree, close-all-windows-but-current, accordion padding.
 
-# hyprdots: gaps_in = 3 (two windows touching = 6) and gaps_out = 8. The ring sits outside the
-# window, so a couple of points extra keep the same visible spacing.
+# Same as the AeroSpace setup: nothing around the screen edge, 18 points between windows
+# (side by side and stacked).
 [gaps]
-inner = 10
-outer = 10
+inner = 18
+outer = 0
 
 [layout]
 default = "dwindle"
@@ -20,8 +20,9 @@ mouse-follows = true
 
 # Window borders, from hyprdots (Catppuccin): focused windows get a mauve-to-rosewater gradient,
 # the rest a soft grey-blue. Last two hex digits are opacity. radius matches macOS windows
-# (hyprdots uses 10 for its own rounding). Set enabled = false to turn borders off, or remove the
-# inactive line to ring only the focused window.
+# (hyprdots uses 10 for its own rounding). The ring is drawn inside each window's edge.
+# Set enabled = false to turn borders off, or remove the inactive line to ring only the
+# focused window.
 [border]
 enabled = true
 width = 2
