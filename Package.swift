@@ -6,6 +6,8 @@ let strict: [SwiftSetting] = [
     .strictMemorySafety(),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .treatAllWarnings(as: .error),
+    // Smallest binary: optimize for size, no debug info, drop reflection metadata nobody reads.
+    .unsafeFlags(["-Osize", "-gnone", "-Xfrontend", "-disable-reflection-metadata"], .when(configuration: .release)),
 ]
 
 let package = Package(
