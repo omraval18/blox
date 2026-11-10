@@ -6,7 +6,7 @@ seconds=${1:-10}
 pid=$(pgrep -f "Blox.app/Contents/MacOS/Blox" | head -1 || true)
 [[ -n "$pid" ]] || { echo "Blox is not running"; exit 1; }
 
-footprint_mb() { footprint "$pid" 2>/dev/null | awk '/Footprint:/ {print $(NF-1), $NF; exit}'; }
+footprint_mb() { footprint "$pid" 2>/dev/null | grep -o 'Footprint: [0-9.]* [KMG]B' | head -1 | cut -d' ' -f2-; }
 rss_mb() { ps -o rss= -p "$pid" | awk '{printf "%.1f MB", $1/1024}'; }
 threads() { ps -M -p "$pid" | tail -n +2 | wc -l | tr -d ' '; }
 cpu() { top -l 2 -pid "$pid" -stats cpu -s "$seconds" | awk 'NF && $1 ~ /^[0-9.]+$/ {v=$1} END {print v "%"}'; }
