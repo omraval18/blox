@@ -12,10 +12,6 @@ let application = NSApplication.shared
 application.setActivationPolicy(.accessory)
 
 let controller = Controller()
-let menu = StatusMenu(
-    onReload: { _ = controller.reloadConfig() },
-    onOpenConfig: { NSWorkspace.shared.open(URL(fileURLWithPath: ConfigFile().path)) },
-)
 
 /// Put parked windows back before exiting, whether quit from the menu or killed by a signal.
 let signals = [SIGINT, SIGTERM].map { number in
@@ -32,4 +28,4 @@ let signals = [SIGINT, SIGTERM].map { number in
 controller.start()
 application.run()
 controller.stop()
-withExtendedLifetime((menu, signals)) {}
+withExtendedLifetime(signals) {}

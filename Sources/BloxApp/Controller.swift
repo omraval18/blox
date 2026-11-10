@@ -1,3 +1,4 @@
+import AppKit
 import BloxCore
 import BloxIPC
 import BloxPlatform
@@ -14,17 +15,18 @@ final class Controller {
     private var watcher: ConfigWatcher?
     private var server: SocketServer?
     private lazy var system = WindowSystem { [weak self] in self?.dispatch($0) }
+    private lazy var menu = StatusMenu(
+        onReload: { [weak self] in _ = self?.reloadConfig() },
+        onOpenConfig: { [weak self] in self?.openConfig() },
+    )
     private lazy var hotkeys = HotkeyCenter { [weak self] in self?.runBinding($0) }
 
     func start() {
+        _ = menu
         _ = reloadConfig()
         state = State(settings: config.settings)
         system.start()
-        watcher = ConfigWatcher(directory: configFile.directory) { [weak self] in
-            if let message = self?.reloadConfig() {
-                self?.log.error("config: \(message)")
-            }
-        }
+        watcher = ConfigWatcher(directory: configFile.directory) { [weak self] in _ = self?.reloadConfig() }
         server = startServer()
     }
 
@@ -48,13 +50,20 @@ final class Controller {
         do {
             config = try Config(parsing: configFile.read())
         } catch {
+            log.error("config: \(error)")
+            menu.setError("\(error)")
             return "\(error)"
         }
+        menu.setError(nil)
         system.animation = config.settings.animation
         dispatch(.updateSettings(config.settings))
         let refused = hotkeys.register(config.bindings.map(\.chord))
         refused.forEach { log.error("hotkey unavailable: \($0.key)") }
         return nil
+    }
+
+    private func openConfig() {
+        NSWorkspace.shared.open(URL(fileURLWithPath: configFile.path))
     }
 
     private func runBinding(_ index: Int) {

@@ -45,7 +45,8 @@ public final class WindowSystem {
 
     func reportFrontmostFocus() {
         guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
-              let element = observers[pid]?.focusedWindow, let id = ids[element] else { return }
-        onCommand(.focusChanged(id))
+              let element = observers[pid]?.focusedWindow else { return }
+        adopt(element)
+        ids[element].map { onCommand(.focusChanged($0)) }
     }
 }

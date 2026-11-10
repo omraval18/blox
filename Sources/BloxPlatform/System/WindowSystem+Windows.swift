@@ -22,7 +22,9 @@ extension WindowSystem {
         switch event {
         case let .created(element), let .restored(element): adopt(element)
         case let .destroyed(element), let .minimized(element): release(element)
-        case let .focused(element): ids[element].map { onCommand(.focusChanged($0)) }
+        case let .focused(element):
+            adopt(element)
+            ids[element].map { onCommand(.focusChanged($0)) }
         }
     }
 }
