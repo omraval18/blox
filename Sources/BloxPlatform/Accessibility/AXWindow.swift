@@ -39,22 +39,27 @@ struct AXWindow {
     }
 
     /// Size first so growth is not clamped by the old position, then position, then size again
-    /// for apps that reflow when moved.
-    func setFrame(_ frame: CGRect) {
+    /// for apps that reflow when moved. False when the app did not take the position.
+    @discardableResult
+    func setFrame(_ frame: CGRect) -> Bool {
         AXAttribute.set(element, kAXSizeAttribute, size: frame.size)
-        AXAttribute.set(element, kAXPositionAttribute, point: frame.origin)
+        let moved = AXAttribute.set(element, kAXPositionAttribute, point: frame.origin)
         AXAttribute.set(element, kAXSizeAttribute, size: frame.size)
+        return moved
     }
 
-    /// One animation step: cheaper than `setFrame` (no settling pass), and move-only when size is fixed.
-    func setStep(_ frame: CGRect, resizing: Bool) {
+    /// One animation step: cheaper than `setFrame` (no settling pass), and move-only when size is
+    /// fixed. False when the app did not take the position.
+    @discardableResult
+    func setStep(_ frame: CGRect, resizing: Bool) -> Bool {
         if resizing {
             AXAttribute.set(element, kAXSizeAttribute, size: frame.size)
         }
-        AXAttribute.set(element, kAXPositionAttribute, point: frame.origin)
+        return AXAttribute.set(element, kAXPositionAttribute, point: frame.origin)
     }
 
-    func move(to point: CGPoint) {
+    @discardableResult
+    func move(to point: CGPoint) -> Bool {
         AXAttribute.set(element, kAXPositionAttribute, point: point)
     }
 

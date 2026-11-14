@@ -9,15 +9,11 @@ final class FrameAnimator {
     private static let maxAnimated = 8
 
     private var tracks = Tracks()
-    /// The frame last applied to each window (mid-animation: the interpolated one).
+    /// The frame last asked of each window (mid-animation: the interpolated one).
     private var current: [WindowID: CGRect] = [:]
     private let clock = DisplayClock()
-    /// Performs the Accessibility calls and measures them (`blox stats`).
+    /// Hands frames to each app's channel and keeps what they measure (`blox stats`).
     let writer = FrameWriter()
-    /// Called whenever a window's frame is set, so overlays can follow it.
-    var onFrame: (@MainActor (WindowID, CGRect) -> Void)?
-    /// Called once a window has been given its final frame.
-    var onSettled: (@MainActor (AXWindow, CGRect) -> Void)?
 
     init() {
         clock.onTick = { [weak self] link in self?.tick(link) }
@@ -48,7 +44,7 @@ final class FrameAnimator {
         }
         // Windows sliding off to be parked keep their size anyway.
         let (glide, first) = finish.isSettle ? writer.begin(window, from: from, to: frame) : (.blend, nil)
-        first.map { shown(id, $0) }
+        first.map { current[id] = $0 }
         tracks.add(AnimationTrack(
             window: window,
             from: from,
@@ -60,7 +56,7 @@ final class FrameAnimator {
         ))
     }
 
-    /// The frame last applied (mid-animation: the interpolated one).
+    /// The frame last asked for (mid-animation: the interpolated one).
     func frame(of id: WindowID) -> CGRect? {
         current[id]
     }
@@ -86,20 +82,14 @@ final class FrameAnimator {
 
     private func put(_ window: AXWindow, at frame: CGRect) {
         writer.place(window, frame)
-        shown(window.id, frame)
-    }
-
-    private func shown(_ id: WindowID, _ frame: CGRect) {
-        current[id] = frame
-        onFrame?(id, frame)
+        current[window.id] = frame
     }
 
     private func arrive(_ window: AXWindow, at frame: CGRect, _ finish: AnimationTrack.Finish) {
         switch finish {
         case .settle:
-            put(window, at: frame)
-            CATransaction.flush()
-            onSettled?(window, frame)
+            writer.settle(window, frame)
+            current[window.id] = frame
         case .park:
             writer.park(window)
             current.removeValue(forKey: window.id)
@@ -107,8 +97,7 @@ final class FrameAnimator {
     }
 
     /// Progress is measured at the moment the frame will be shown, not when this callback runs.
-    /// Each window's overlay is updated and pushed to the screen right after that window moved,
-    /// not after every app has answered: asking an app to move blocks until it does. A frame that
+    /// Steps are only submitted here; each app's channel applies them at its own pace. A frame that
     /// repeats (frames are whole points, so the tail of an ease-out often does) is skipped.
     private func tick(_ link: CADisplayLink) {
         let began = CACurrentMediaTime()
@@ -120,8 +109,6 @@ final class FrameAnimator {
         for (track, frame) in moving where frame != current[track.window.id] {
             current[track.window.id] = frame
             writer.step(track.window, to: frame, resizing: track.resizesEachStep)
-            onFrame?(track.window.id, frame)
-            CATransaction.flush()
         }
         writer.frameDone(work: CACurrentMediaTime() - began, interval: link.targetTimestamp - link.timestamp)
         if tracks.isEmpty {

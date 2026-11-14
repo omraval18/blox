@@ -13,7 +13,7 @@ each tagged; `VERSION` and `Sources/BloxIPC/Version.swift` must match (a test ch
 ## Where things stand
 
 - Repo `main` at v0.0.18 plus the `tune/hyprland-feel` branch (v0.0.19, see below). 90 source files,
-  23 test files, **110 tests passing**, lint clean.
+  29 test files, **149 tests passing**, lint clean.
 - **Installed locally**: `/Applications/Blox.app` v0.0.16 (v0.0.18 built, not yet installed), CLI symlinked at `/opt/homebrew/bin/blox`
   (into the app bundle). Blox is **not running**: the owner uses **AeroSpace** as their daily driver
   (start-at-login on). Never launch Blox without their say-so; it tiles every open window and both
@@ -47,7 +47,7 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   fullscreen/hide handling, and whether apps keep up with 8 simultaneous movers.
 - Not done, deliberately: `slidevert` (macOS keeps windows below the menu bar), border spin
   (`borderangle`, would need an always-running animation), window fade (no AX opacity), per-app AX
-  queues (needs non-Sendable AX types off the main actor).
+  queues (needs non-Sendable AX types off the main actor; since done for frame setting, ADR 0003).
 
 ## Menu bar redesign (on `tune/hyprland-feel`, uncommitted at time of writing)
 
@@ -147,6 +147,20 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   `restoreParked()` (quit); dropped without restoring when the app quits (`detach`). No effect at
   all on apps where the attribute is already off, which is the usual case; cost there is one
   extra AX read per move or snap. Never seen on a real Chromium/Electron app with it on.
+- Per-app frame channels (slice 6, ADR 0003), **unverified on real windows; the riskiest change
+  of the day**. `FrameWriter` no longer calls AX: it submits `FrameStep`s (`resize`, `move`,
+  `place`, `settle`, `park`) to one `AppChannel` actor per pid, which owns its own `AXUIElement`s
+  (resolved by `WindowID` from the app's window list, cached), runs on its own serial dispatch
+  queue, applies steps, times them and hops to the main actor (`WindowSystem.applied`: ring
+  follows window-server bounds, flush, `settled` for `settle`). The mailbox is
+  `OSAllocatedUnfairLock<AppQueue>`; `AppQueue`/`StepQueue` (Core, tested) do latest-frame-wins
+  merging, keep final steps in order, and now decide the `AXEnhancedUserInterface` switching from
+  slice 5 (the old `EnhancedInterface` state machine became plain calls). Quit
+  (`restoreParked`) is synchronous: close channels, wait for each one's current call, restore the
+  setting, then set parked frames directly. Unpark without a slide is now a snap through
+  `animator.move(timing: nil)`, so it also runs the size-limit check. `blox stats` late frames now
+  count only main-actor work per tick. Look first at: rings during fast moves (updates are now
+  asynchronous), workspace switches with several apps, Blox quitting while an app is hung.
 
 ## Verified vs not verified
 
@@ -233,8 +247,8 @@ manager at a time, charger plugged in.
    ask for screenshots. Likely trouble spots are listed under "Never confirmed" above.
 2. Run the benchmark for both managers; record results in `docs/benchmarking.md` or a results file.
 3. Known gaps, roughly by value: fades for window open/close;
-   per-app AX queues (AX calls run on the main thread with 1 s timeouts, so one hung app can stall
-   tiling); crash recovery for parked windows (a hard kill leaves them offscreen until restart);
+   the AX calls still on the main actor (focus/raise, adoption, attribute reads, close: one hung
+   app can still stall these; frame setting runs per app since ADR 0003); crash recovery for parked windows (a hard kill leaves them offscreen until restart);
    drag-to-swap and focus-follows-mouse; native fullscreen / other Spaces; `join-with` and nested
    containers (deliberately not modelled); per-axis resize (one ratio per workspace today);
    launch-at-login helper; notarization; a stable signing identity.

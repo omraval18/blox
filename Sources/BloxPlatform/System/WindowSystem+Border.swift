@@ -1,5 +1,6 @@
 import BloxCore
 import CoreGraphics
+import QuartzCore
 
 extension WindowSystem {
     /// Tells the system which window has focus (from the model), restyling the rings.
@@ -29,9 +30,27 @@ extension WindowSystem {
         border.raise(id)
     }
 
+    /// An app took a frame Blox set: its ring follows and is pushed to the screen right away, not
+    /// after every app has answered. Answers for windows forgotten or parked since are ignored.
+    func applied(_ id: WindowID, _ step: FrameStep) {
+        guard animator.frame(of: id) != nil else { return }
+        switch step {
+        case let .resize(frame), let .move(frame), let .place(frame):
+            followBorder(id, frame)
+            CATransaction.flush()
+        case let .settle(frame):
+            followBorder(id, frame)
+            CATransaction.flush()
+            settled(id, frame)
+        case .park:
+            break
+        }
+    }
+
     /// An animation landed: the ring hugs the window's real frame (an app that refused the size
     /// sends no notification when its size does not change), and its size limits are checked.
-    func settled(_ window: AXWindow, _ target: CGRect) {
+    func settled(_ id: WindowID, _ target: CGRect) {
+        guard let window = windows[id] else { return }
         fitBorder(window)
         checkSizeLimits(window, target)
     }

@@ -51,7 +51,7 @@ extension WindowSystem {
 
     func release(_ element: AXUIElement) {
         guard let id = ids.removeValue(forKey: element) else { return }
-        windows.removeValue(forKey: id)
+        windows.removeValue(forKey: id).map { animator.writer.forget(id, of: $0.pid) }
         parked.removeValue(forKey: id)
         refusesParking.remove(id)
         newWindows.remove(id)
