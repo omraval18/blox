@@ -7,6 +7,7 @@ extension Controller {
         switch request {
         case "version": return bloxVersion
         case "status": return summary
+        case "stats": return animationStats
         case "reload": return reloadConfig().map { "error: \($0)" } ?? "ok"
         default:
             guard let command = Command(parsing: request)

@@ -119,6 +119,14 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   `adopt`. Attribute reads, `refreshBorder` and the mouse-follows-focus read still use AX.
   Unverified: whether the window server reflects a park move immediately in `recheck`'s second
   read (if it lags, the window is just treated as refusing parking, which is the cautious side).
+- `blox stats` (slice 3). `AnimationStats` (Platform) counts display-link frames, late frames
+  (tick work longer than `targetTimestamp - timestamp`) and, per app pid, an EMA of how long one
+  `setStep` takes, kept apart for resizing and move-only steps. The EMA and the late rule are
+  `Pace` in Core (tested). Updated only inside ticks; an app's entry is dropped in `detach`.
+  Served by `Controller+Requests` (`stats`) via `WindowSystem.animationStats`. Unverified: the
+  numbers on real apps (never run), and the reply over the live socket.
+  To stay under the type-length limit, `FrameAnimator` lost its display link to `DisplayClock` and
+  its AX writes (and the timing around them) to `FrameWriter`; behaviour unchanged.
 
 ## Verified vs not verified
 
@@ -162,7 +170,7 @@ executes effects. State changes only in the reducer. Notable pieces:
 - CLI commands: `focus|move <dir>`, `workspace <n>`, `move-to-workspace <n>`, `layout <name>`,
   `resize <delta>`, `balance`, `toggle-floating`, `fullscreen`, `workspace-back-and-forth`,
   `move-workspace-to-monitor`, `mode <m>`, `animation <style|off>`, `exec <cmd>`, `retile`,
-  `reload-config`; plus `status`, `reload`, `version`, `--version`.
+  `reload-config`; plus `status`, `stats`, `reload`, `version`, `--version`.
 
 ## Owner preferences (they said these explicitly)
 

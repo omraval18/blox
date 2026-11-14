@@ -62,6 +62,7 @@ public final class WindowSystem {
     func detach(_ pid: pid_t) {
         observers.removeValue(forKey: pid)?.stop()
         releaseWindows(of: pid)
+        animator.forgetApp(pid)
     }
 
     func releaseWindows(of pid: pid_t) {

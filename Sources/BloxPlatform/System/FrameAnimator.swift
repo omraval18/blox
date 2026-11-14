@@ -1,22 +1,31 @@
-import AppKit
 import BloxCore
 import QuartzCore
 
 /// Glides windows to new frames. A display link runs only while something is moving, and progress
 /// follows the clock, so a slow app drops frames instead of making the animation lag behind.
 @MainActor
-final class FrameAnimator: NSObject {
+final class FrameAnimator {
     /// More simultaneous movers than this snap: per-frame Accessibility calls would not keep up.
     private static let maxAnimated = 8
 
     private var tracks: [WindowID: AnimationTrack] = [:]
     /// The frame last applied to each window (mid-animation: the interpolated one).
     private var current: [WindowID: CGRect] = [:]
-    private var link: CADisplayLink?
+    private let clock = DisplayClock()
+    private var writer = FrameWriter()
     /// Called whenever a window's frame is set, so overlays can follow it.
     var onFrame: (@MainActor (WindowID, CGRect) -> Void)?
     /// Called once a window has been given its final frame.
     var onSettled: (@MainActor (AXWindow, CGRect) -> Void)?
+
+    init() {
+        clock.onTick = { [weak self] link in self?.tick(link) }
+    }
+
+    /// Frame and per-app answer times, for `blox stats`.
+    var stats: AnimationStats {
+        writer.stats
+    }
 
     /// Moves `window` to `frame`, gliding with `timing` or snapping when it is nil. With `start`, the
     /// window is first put there (a window arriving from offscreen or from a smaller size).
@@ -29,12 +38,12 @@ final class FrameAnimator: NSObject {
     ) {
         let id = window.id
         if let start {
-            window.setFrame(start)
+            writer.place(window, start)
             current[id] = start
             onFrame?(id, start)
         }
         guard let timing, let from = current[id], from != frame,
-              tracks.count < Self.maxAnimated || tracks[id] != nil, startClock() else {
+              tracks.count < Self.maxAnimated || tracks[id] != nil, clock.start() else {
             tracks.removeValue(forKey: id)
             arrive(window, at: frame, finish)
             return
@@ -68,6 +77,11 @@ final class FrameAnimator: NSObject {
         current[id] = frame
     }
 
+    /// An app quit: drop what was measured about it.
+    func forgetApp(_ pid: pid_t) {
+        writer.forgetApp(pid)
+    }
+
     func forget(_ id: WindowID) {
         tracks.removeValue(forKey: id)
         current.removeValue(forKey: id)
@@ -77,41 +91,31 @@ final class FrameAnimator: NSObject {
         let id = window.id
         switch finish {
         case .settle:
-            window.setFrame(frame)
+            writer.place(window, frame)
             current[id] = frame
             onFrame?(id, frame)
             CATransaction.flush()
             onSettled?(window, frame)
         case .park:
-            window.move(to: Displays.parkingPoint())
+            writer.park(window)
             current.removeValue(forKey: id)
         }
-    }
-
-    private func startClock() -> Bool {
-        if link != nil {
-            return true
-        }
-        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return false }
-        let created = screen.displayLink(target: self, selector: #selector(tick))
-        created.add(to: .main, forMode: .common)
-        link = created
-        return true
     }
 
     /// Progress is measured at the moment the frame will be shown, not when this callback runs.
     /// Each window's overlay is updated and pushed to the screen right after that window moved,
     /// not after every app has answered: asking an app to move blocks until it does.
-    @objc private func tick(_ link: CADisplayLink) {
+    private func tick(_ link: CADisplayLink) {
+        let began = CACurrentMediaTime()
         let steps = tracks.compactMap { id, track in step(id, track, at: link.targetTimestamp) }
         for (track, frame) in steps {
-            track.window.setStep(frame, resizing: track.from.size != track.to.size)
+            writer.step(track.window, to: frame, resizing: track.from.size != track.to.size)
             onFrame?(track.window.id, frame)
             CATransaction.flush()
         }
+        writer.frameDone(work: CACurrentMediaTime() - began, interval: link.targetTimestamp - link.timestamp)
         if tracks.isEmpty {
-            link.invalidate()
-            self.link = nil
+            clock.stop()
         }
     }
 

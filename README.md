@@ -123,7 +123,7 @@ Used by bindings and the CLI (`blox <command>`):
 | Workspaces | `workspace <n>`, `move-to-workspace <n>`, `workspace-back-and-forth`, `move-workspace-to-monitor` |
 | Layout | `layout <name>`, `resize <delta>`, `balance`, `toggle-floating`, `fullscreen`, `close` |
 | Misc | `mode <name>`, `animation <style\|off>`, `exec <cmd>`, `retile`, `reload-config` |
-| Info | `status`, `version` |
+| Info | `status`, `stats` (animation frame counts and how long each app takes per step), `version` |
 
 ## Behaviour and limits
 

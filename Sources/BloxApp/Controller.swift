@@ -61,6 +61,10 @@ final class Controller {
         state.summary
     }
 
+    var animationStats: String {
+        system.animationStats
+    }
+
     /// Reloads the config file. On error the previous config stays active and the message is returned.
     func reloadConfig() -> String? {
         do {
