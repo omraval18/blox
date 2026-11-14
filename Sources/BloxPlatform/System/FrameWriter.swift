@@ -7,6 +7,7 @@ import QuartzCore
 @MainActor
 final class FrameWriter {
     private(set) var stats = AnimationStats()
+    private var interface = EnhancedInterface()
 
     /// How `window` changes size on its way `from` -> `to`: an app too slow to resize every frame
     /// (the policy is `ResizeMode`, in Core) is resized once. A shrink happens right here; the
@@ -26,8 +27,26 @@ final class FrameWriter {
         stats.answered(window.pid, resizing ? .resizing : .moving, in: CACurrentMediaTime() - began)
     }
 
+    /// Sets a whole frame at once (a snap, or an animation's final frame).
     func place(_ window: AXWindow, _ frame: CGRect) {
+        hold(window.pid)
         window.setFrame(frame)
+        release(window.pid)
+    }
+
+    /// Frame changes for an app's windows start or end: `AXEnhancedUserInterface` stays off while
+    /// any is under way (`EnhancedInterface`).
+    func hold(_ pid: pid_t) {
+        interface.begin(pid)
+    }
+
+    func release(_ pid: pid_t) {
+        interface.end(pid)
+    }
+
+    /// Blox is quitting: every app gets its `AXEnhancedUserInterface` back.
+    func restoreInterfaces() {
+        interface.restoreAll()
     }
 
     func park(_ window: AXWindow) {
@@ -42,5 +61,6 @@ final class FrameWriter {
     /// An app quit: drop what was measured about it.
     func forgetApp(_ pid: pid_t) {
         stats.drop(pid)
+        interface.drop(pid)
     }
 }

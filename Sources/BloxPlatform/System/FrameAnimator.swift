@@ -33,15 +33,18 @@ final class FrameAnimator {
         finish: AnimationTrack.Finish = .settle,
     ) {
         let id = window.id
-        if let start {
-            writer.place(window, start)
-            shown(id, start)
-        }
+        // One hold across the whole move, so the app's setting is read at most once for it.
+        writer.hold(window.pid)
+        defer { writer.release(window.pid) }
+        start.map { put(window, at: $0) }
         guard let timing, let from = current[id], from != frame,
               tracks.count < Self.maxAnimated || tracks[id] != nil, clock.start() else {
-            tracks.remove(id)
+            tracks.remove(id).map { writer.release($0.window.pid) }
             arrive(window, at: frame, finish)
             return
+        }
+        if tracks[id] == nil {
+            writer.hold(window.pid)
         }
         // Windows sliding off to be parked keep their size anyway.
         let (glide, first) = finish.isSettle ? writer.begin(window, from: from, to: frame) : (.blend, nil)
@@ -77,8 +80,13 @@ final class FrameAnimator {
     }
 
     func forget(_ id: WindowID) {
-        tracks.remove(id)
+        tracks.remove(id).map { writer.release($0.window.pid) }
         current.removeValue(forKey: id)
+    }
+
+    private func put(_ window: AXWindow, at frame: CGRect) {
+        writer.place(window, frame)
+        shown(window.id, frame)
     }
 
     private func shown(_ id: WindowID, _ frame: CGRect) {
@@ -89,8 +97,7 @@ final class FrameAnimator {
     private func arrive(_ window: AXWindow, at frame: CGRect, _ finish: AnimationTrack.Finish) {
         switch finish {
         case .settle:
-            writer.place(window, frame)
-            shown(window.id, frame)
+            put(window, at: frame)
             CATransaction.flush()
             onSettled?(window, frame)
         case .park:
@@ -106,7 +113,10 @@ final class FrameAnimator {
     private func tick(_ link: CADisplayLink) {
         let began = CACurrentMediaTime()
         let (moving, landed) = tracks.advance(to: link.targetTimestamp)
-        landed.forEach { arrive($0.window, at: $0.to, $0.finish) }
+        for track in landed {
+            arrive(track.window, at: track.to, track.finish)
+            writer.release(track.window.pid)
+        }
         for (track, frame) in moving where frame != current[track.window.id] {
             current[track.window.id] = frame
             writer.step(track.window, to: frame, resizing: track.resizesEachStep)

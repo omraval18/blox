@@ -22,7 +22,8 @@ struct Tracks {
         all[track.window.id] = track
     }
 
-    mutating func remove(_ id: WindowID) {
+    @discardableResult
+    mutating func remove(_ id: WindowID) -> AnimationTrack? {
         all.removeValue(forKey: id)
     }
 

@@ -137,6 +137,16 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   tracks keep `.blend`. `FrameAnimator`'s tracks moved to `Tracks` to stay under the type-length
   limit. Unverified on real windows: how a once-resized Chromium window looks, and whether the
   8 ms threshold is right (check `blox stats`).
+- `AXEnhancedUserInterface` off while Blox sets frames (slice 5), **unverified**. `EnhancedInterface`
+  (Platform/Accessibility) keeps a per-pid use count: the app attribute is read once when its
+  first frame change starts, switched off only if it was on, and switched back on when the last
+  ends. Uses are held by `FrameAnimator.move` (one hold per call, so a snap reads it once) and by
+  each running track (released on landing, `forget`, snap-over). `FrameWriter.place` holds too, so
+  `unpark` (now routed through it) and snaps are covered; the instant park in `park` and the
+  re-park in `recheck` (position-only moves) are not. Restored for all apps in
+  `restoreParked()` (quit); dropped without restoring when the app quits (`detach`). No effect at
+  all on apps where the attribute is already off, which is the usual case; cost there is one
+  extra AX read per move or snap. Never seen on a real Chromium/Electron app with it on.
 
 ## Verified vs not verified
 

@@ -19,11 +19,13 @@ extension WindowSystem {
         }
     }
 
-    /// Puts every parked window back where it was. Called on quit so nothing is left offscreen.
+    /// Puts every parked window back where it was, and gives apps back the Accessibility setting
+    /// Blox switched off while animating. Called on quit so nothing is left changed.
     public func restoreParked() {
         for id in Array(parked.keys) {
             unpark(id)
         }
+        animator.writer.restoreInterfaces()
     }
 
     /// Runs a shell command. Commands such as dock autohide change the usable screen area without
@@ -94,7 +96,7 @@ extension WindowSystem {
             return animator.move(window, to: frame, timing: arrival.timing, from: start)
         }
         animator.forget(id)
-        window.setFrame(frame)
+        animator.writer.place(window, frame)
         animator.record(id, frame)
         followBorder(id, frame)
         border.settle(id)
