@@ -46,10 +46,12 @@ extension WindowSystem {
     private func place(_ id: WindowID, _ frame: CGRect) {
         let wasParked = parked.removeValue(forKey: id) != nil
         guard let window = windows[id] else { return }
-        let reversing = animator.destination(of: id) != nil
-        if wasParked, !reversing, let arrival = slideIn(to: frame) {
-            animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
-        } else if newWindows.remove(id) != nil, let arrival = entrance(to: frame) {
+        if wasParked, let arrival = slideIn(to: frame) {
+            // A window still sliding out turns around from where it is.
+            let start = animator.destination(of: id) == nil ? arrival.start : nil
+            animator.move(window, to: frame, timing: arrival.timing, from: start)
+        } else if newWindows.remove(id) != nil {
+            let arrival = entrance(to: frame)
             animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
         } else {
             animator.move(window, to: frame, timing: settings.animation.moveTiming)
@@ -74,7 +76,8 @@ extension WindowSystem {
     private func unpark(_ id: WindowID) {
         guard let frame = parked.removeValue(forKey: id), let window = windows[id] else { return }
         if let arrival = slideIn(to: frame) {
-            return animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
+            let start = animator.destination(of: id) == nil ? arrival.start : nil
+            return animator.move(window, to: frame, timing: arrival.timing, from: start)
         }
         animator.forget(id)
         window.setFrame(frame)

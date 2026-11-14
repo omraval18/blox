@@ -48,7 +48,7 @@ style = "hyprdots"
 style = "slide"
 
 # Hyprland's workspaces: windows glide off one edge and the new workspace's windows in from the
-# other. slide | slidevert | off. Shorter than window moves, so switching stays quick.
+# other. slide | off. Shorter than window moves, so switching stays quick.
 [animation.workspaces]
 style = "slide"
 duration = 0.3

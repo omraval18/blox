@@ -12,20 +12,20 @@ struct AnimationTableTests {
         style = "popin 70"
         duration = 0.25
         [animation.workspaces]
-        style = "slidevert"
+        style = "slide"
         curve = "mine"
         """
         let animation = try Config(parsing: text).settings.animation
         #expect(animation.curve == .bounce)
         #expect(animation.open.style == .popin(0.7))
         #expect(animation.open.duration == 0.25)
-        #expect(animation.workspaces.style == .slideVertical)
+        #expect(animation.workspaces.style == .slide)
         #expect(animation.workspaces.curve == Curve(parsing: "0.1 0.2 0.3 0.4"))
     }
 
     @Test(arguments: [
         "[animation.open]\nstyle = \"spin\"",
-        "[animation.workspaces]\nstyle = \"popin\"",
+        "[animation.workspaces]\nstyle = \"slidevert\"",
         "[animation.open]\nduration = 5",
         "[animation.open]\nspeed = 1",
     ])

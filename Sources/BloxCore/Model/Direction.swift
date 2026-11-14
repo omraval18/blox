@@ -12,13 +12,4 @@ public enum Direction: String, Sendable, CaseIterable {
         case .down: CGVector(dx: 0, dy: distance)
         }
     }
-
-    public var opposite: Self {
-        switch self {
-        case .left: .right
-        case .right: .left
-        case .up: .down
-        case .down: .up
-        }
-    }
 }

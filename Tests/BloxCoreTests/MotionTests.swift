@@ -25,12 +25,17 @@ struct MotionTests {
         #expect(Entrance.off.startFrame(for: target) == nil)
     }
 
-    @Test func `vertical motion turns horizontal travel into vertical`() {
+    @Test func `workspace motion exits the way the reducer says, or not at all`() {
         #expect(WorkspaceMotion.slide.exit(for: .left) == .left)
-        #expect(WorkspaceMotion.slideVertical.exit(for: .left) == .up)
-        #expect(WorkspaceMotion.slideVertical.exit(for: .right) == .down)
+        #expect(WorkspaceMotion.slide.exit(for: .right) == .right)
         #expect(WorkspaceMotion.off.exit(for: .left) == nil)
-        #expect(WorkspaceMotion(parsing: "slidevert") == .slideVertical)
+        #expect(WorkspaceMotion(parsing: "slide") == .slide)
+        #expect(WorkspaceMotion(parsing: "slidevert") == nil)
+    }
+
+    @Test func `directions offset by distance with y growing downward`() {
+        #expect(Direction.left.offset(100) == CGVector(dx: -100, dy: 0))
+        #expect(Direction.down.offset(100) == CGVector(dx: 0, dy: 100))
     }
 
     @Test func `phases follow movement timing unless they override it`() {

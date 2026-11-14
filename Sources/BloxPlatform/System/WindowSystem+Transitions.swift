@@ -19,16 +19,17 @@ extension WindowSystem {
         return (frame.offsetBy(dx: -travel.dx, dy: -travel.dy), timing)
     }
 
-    func entrance(to frame: CGRect) -> (start: CGRect, timing: Timing)? {
-        guard let start = settings.animation.open.style.startFrame(for: frame),
-              let timing = settings.animation.timing(of: settings.animation.open) else { return nil }
-        return (start, timing)
+    /// How a new window reaches its tile: popin starts from a smaller centred frame, slide glides from
+    /// where the app opened it, off snaps (a nil timing).
+    func entrance(to frame: CGRect) -> (start: CGRect?, timing: Timing?) {
+        let open = settings.animation.open
+        guard open.style != .off, let timing = settings.animation.timing(of: open) else { return (nil, nil) }
+        return (open.style.startFrame(for: frame), timing)
     }
 
     private func slideTravel(for frame: CGRect) -> CGVector? {
         guard let travel = slide,
               let exit = settings.animation.workspaces.style.exit(for: travel) else { return nil }
-        let size = Displays.screenSize(containing: frame)
-        return exit.offset(exit == .left || exit == .right ? size.width : size.height)
+        return exit.offset(Displays.screenSize(containing: frame).width)
     }
 }

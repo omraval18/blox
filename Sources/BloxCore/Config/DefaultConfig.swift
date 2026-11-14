@@ -35,12 +35,17 @@ public extension Config {
     [animation.open]
     style = "slide"
 
-    # How a workspace switch looks: slide | slidevert | off. duration and curve are optional.
+    # How a workspace switch looks: slide | off. duration and curve are optional.
     [animation.workspaces]
     style = "slide"
 
     # Your own bezier curves, as in Hyprland: name = "x1 y1 x2 y2"
     [curves]
+
+    # Per-workspace starting layout and ratio, as in Hyprland workspace rules:
+    # [workspace.3]
+    # layout = "monocle"
+    # ratio = 0.6
 
     # Per-app rules by bundle id: "workspace <name>" and/or "float"
     [rules]

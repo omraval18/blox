@@ -1,4 +1,4 @@
-# Blox handoff (state as of v0.0.18)
+# Blox handoff (state as of v0.0.19)
 
 Read this first in a new session, then `CLAUDE.md` (rules) and `docs/benchmarking.md`.
 
@@ -12,8 +12,8 @@ each tagged; `VERSION` and `Sources/BloxIPC/Version.swift` must match (a test ch
 
 ## Where things stand
 
-- Repo `main`, clean, tags `v0.0.1`..`v0.0.18`. 79 source files (largest 121 lines), 17 test
-  files, **86 tests passing**, lint clean.
+- Repo `main` at v0.0.18 plus the `tune/hyprland-feel` branch (v0.0.19, see below). 90 source files,
+  23 test files, **110 tests passing**, lint clean.
 - **Installed locally**: `/Applications/Blox.app` v0.0.16 (v0.0.18 built, not yet installed), CLI symlinked at `/opt/homebrew/bin/blox`
   (into the app bundle). Blox is **not running**: the owner uses **AeroSpace** as their daily driver
   (start-at-login on). Never launch Blox without their say-so; it tiles every open window and both
@@ -22,6 +22,32 @@ each tagged; `VERSION` and `Sources/BloxIPC/Version.swift` must match (a test ch
   Their AeroSpace dotfiles live in `~/dev/dotfiles` (stow); those were not touched.
 - Accessibility permission for Blox was reset (`tccutil reset`) and the app freshly reinstalled so
   the owner can re-grant it. Expect that to be the first thing they do.
+
+## v0.0.19 (branch `tune/hyprland-feel`, not yet merged or tagged)
+
+Built without launching Blox: AeroSpace was running on the owner's desktop, and it tiles every
+window, so any live run would have fought it. Everything below is verified by unit tests, build and
+lint only, and **none of the platform behaviour has been seen on real windows**.
+
+- Hyprland-style animation phases: `[animation.open]` (`slide|popin [pct]|off`) and
+  `[animation.workspaces]` (`slide|off`), each with optional `duration` and `curve`
+  (ADR 0001). The `animation <style>` command and `style =` keep the phase choices.
+- Workspace slide: reducer emits `Effect.slide(direction)`; `WindowSystem+Transitions` and
+  `FrameAnimator` (`AnimationTrack.Finish.park`) glide windows off/on an edge.
+- Smoothness: frames snap to whole points and unchanged ones skip the AX round trip; progress is
+  taken at the display link's `targetTimestamp`; the animation cap rose from 6 to 8 movers; border
+  rings only rebuild their path on resize.
+- Fixes found by reading the code against AeroSpace: Cmd-H apps leave the layout and rejoin on
+  unhide (no hole, no ghost ring); windows that go native fullscreen leave tiling; windows that are
+  not tileable yet at creation get one retry 250 ms later; Blox waits for the Accessibility grant
+  (distributed notification) instead of exiting, so a rebuilt, re-signed binary needs no relaunch.
+- Config: `[gaps] outer-top|bottom|left|right` and `smart`, `[workspace.<name>] layout|ratio`,
+  workspace names sort numerically (`2` before `10`), new `close` command.
+- Look first at (unverified): the slide on a real multi-window switch, popin start frames, the
+  fullscreen/hide handling, and whether apps keep up with 8 simultaneous movers.
+- Not done, deliberately: `slidevert` (macOS keeps windows below the menu bar), border spin
+  (`borderangle`, would need an always-running animation), window fade (no AX opacity), per-app AX
+  queues (needs non-Sendable AX types off the main actor).
 
 ## Verified vs not verified
 
@@ -103,10 +129,11 @@ manager at a time, charger plugged in.
 
 ## Next steps toward v0.1.0
 
-1. Owner live-tests v0.0.16 (quit AeroSpace, open Blox, grant Accessibility). Fix whatever breaks;
+0. Merge `tune/hyprland-feel` (PR), tag `v0.0.19`.
+1. Owner live-tests v0.0.19 (quit AeroSpace, open Blox, grant Accessibility). Fix whatever breaks;
    ask for screenshots. Likely trouble spots are listed under "Never confirmed" above.
 2. Run the benchmark for both managers; record results in `docs/benchmarking.md` or a results file.
-3. Known gaps, roughly by value: workspace-switch slide animation; fades for window open/close;
+3. Known gaps, roughly by value: fades for window open/close;
    per-app AX queues (AX calls run on the main thread with 1 s timeouts, so one hung app can stall
    tiling); crash recovery for parked windows (a hard kill leaves them offscreen until restart);
    drag-to-swap and focus-follows-mouse; native fullscreen / other Spaces; `join-with` and nested

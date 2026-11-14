@@ -26,7 +26,7 @@ extension State {
         case .moveWorkspaceToMonitor: swapWithNextMonitor()
         case let .setLayout(kind): updateFocused { $0.layout = kind }
         case let .resize(delta): updateFocused { $0.ratio = min(max($0.ratio + delta, 0.1), 0.9) }
-        case .balance: updateFocused { [ratio = settings.defaultRatio] in $0.ratio = ratio }
+        case .balance: updateFocused { [settings] in $0.ratio = settings.defaultRatio(for: $0.name) }
         case .toggleFloating: toggleFloatingFocused()
         case .toggleFullscreen: toggleFullscreenFocused()
         case let .setMode(name): mode = name

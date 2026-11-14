@@ -92,9 +92,12 @@ style = "hyprdots"       # or: curve = "snappy" | "x1 y1 x2 y2"
 [animation.open]         # Hyprland's windowsIn: slide | popin [percent] | off
 style = "popin 85"
 
-[animation.workspaces]   # Hyprland's workspaces: slide | slidevert | off
+[animation.workspaces]   # Hyprland's workspaces: slide | off
 style = "slide"
 duration = 0.3           # each phase may set its own duration and curve
+
+[workspace.3]            # per-workspace starting layout and ratio (Hyprland workspace rules)
+layout = "monocle"
 
 [rules]
 "com.google.Chrome" = "workspace B"
@@ -105,7 +108,7 @@ duration = 0.3           # each phase may set its own duration and curve
 "alt-1" = "workspace 1"
 ```
 
-Sections: `[gaps] [layout] [focus] [border] [animation] [animation.open] [animation.workspaces] [curves] [rules] [bindings] [mode.<name>]`.
+Sections: `[gaps] [layout] [focus] [border] [animation] [animation.open] [animation.workspaces] [curves] [workspace.<name>] [rules] [bindings] [mode.<name>]`.
 Gaps also take `outer-top|bottom|left|right` (per-edge) and `smart = true` (no gaps around a lone window).
 Unknown keys are errors with line numbers. Modifiers: `alt`, `ctrl`, `shift`, `cmd`.
 Chain commands with `;`, for example `"alt-r" = "mode resize ; layout dwindle"`.

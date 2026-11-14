@@ -31,7 +31,11 @@ public struct State: Equatable, Sendable {
     /// Applies `change` to the named workspace, creating it from the defaults if needed.
     mutating func update(_ name: String, _ change: (inout Workspace) -> Void) {
         var workspace = workspaces[name]
-            ?? Workspace(name: name, layout: settings.defaultLayout, ratio: settings.defaultRatio)
+            ?? Workspace(
+                name: name,
+                layout: settings.defaultLayout(for: name),
+                ratio: settings.defaultRatio(for: name),
+            )
         change(&workspace)
         workspaces[name] = workspace
     }

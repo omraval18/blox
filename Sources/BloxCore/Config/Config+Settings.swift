@@ -9,7 +9,9 @@ extension Config {
         case "animation": try applyAnimation(entry, curves)
         case "animation.open": try applyOpen(entry, curves)
         case "animation.workspaces": try applyWorkspaces(entry, curves)
-        default: return false
+        default:
+            guard table.hasPrefix("workspace.") else { return false }
+            try applyWorkspace(entry, name: String(table.dropFirst(10)))
         }
         return true
     }
@@ -37,6 +39,17 @@ extension Config {
         case "default": settings.defaultLayout = try layout(entry)
         case "ratio": settings.defaultRatio = try number(entry, in: Tiling.ratioRange)
         default: throw unknown(entry, in: "layout")
+        }
+    }
+
+    private mutating func applyWorkspace(_ entry: TOMLEntry, name: String) throws {
+        switch entry.key {
+        case "layout": settings.workspaces[name, default: WorkspaceDefaults()].layout = try layout(entry)
+        case "ratio": settings.workspaces[name, default: WorkspaceDefaults()].ratio = try number(
+                entry,
+                in: Tiling.ratioRange,
+            )
+        default: throw unknown(entry, in: "workspace.\(name)")
         }
     }
 
@@ -85,7 +98,7 @@ extension Config {
         case "style": settings.animation.workspaces.style = try parse(
                 entry,
                 WorkspaceMotion.init,
-                "off, slide, slidevert",
+                "off, slide",
             )
         case "duration": settings.animation.workspaces.duration = try number(entry, in: Self.durations)
         case "curve": settings.animation.workspaces.curve = try curve(entry, curves)
