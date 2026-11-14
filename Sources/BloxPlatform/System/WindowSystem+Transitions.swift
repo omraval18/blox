@@ -30,6 +30,6 @@ extension WindowSystem {
     private func slideTravel(for frame: CGRect) -> CGVector? {
         guard let travel = slide,
               let exit = settings.animation.workspaces.style.exit(for: travel) else { return nil }
-        return exit.offset(Displays.screenSize(containing: frame).width)
+        return exit.offset(Displays.screen(containing: frame).width)
     }
 }

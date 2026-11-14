@@ -10,6 +10,10 @@ public final class WindowSystem {
     var windows: [WindowID: AXWindow] = [:]
     var ids: [AXUIElement: WindowID] = [:]
     var parked: [WindowID: CGRect] = [:]
+    /// Hidden windows whose app moved them back on screen even after being parked again.
+    var refusesParking: Set<WindowID> = []
+    /// Windows reported moved or resized since their last check (see `reshaped`).
+    var reshapes: Set<WindowID> = []
     let animator = FrameAnimator()
     /// Kept current by the app after every state change; read for animation and cursor behaviour.
     public var settings = Settings() {
@@ -26,6 +30,7 @@ public final class WindowSystem {
     var slide: Direction?
     /// Windows that have not been placed yet: their first placement may play the open animation.
     var newWindows: Set<WindowID> = []
+    var adoption = Adoption.running
     private var tokens: [any NSObjectProtocol] = []
 
     public init(onCommand: @escaping @MainActor (Command) -> Void) {
@@ -34,12 +39,14 @@ public final class WindowSystem {
 
     public func start() {
         animator.onFrame = { [weak self] id, frame in self?.followBorder(id, frame) }
-        animator.onSettled = { [weak self] window, frame in self?.checkMinimum(window, frame) }
+        animator.onSettled = { [weak self] window, frame in self?.settled(window, frame) }
         border.apply(settings.border)
         onCommand(.monitorsChanged(Displays.monitors()))
+        adoption = .collecting([:])
         for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
             attach(app.processIdentifier)
         }
+        placePending()
         tokens = subscribeToSystemEvents()
         reportFrontmostFocus()
     }

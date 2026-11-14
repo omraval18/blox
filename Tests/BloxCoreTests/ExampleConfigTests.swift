@@ -13,7 +13,8 @@ struct ExampleConfigTests {
     @Test func `aerospace compat example parses and covers the keymap`() throws {
         let config = try example("aerospace-compat.toml")
         let main = try #require(config.modes["main"])
-        #expect(main.count == 2 * 28 + 18)
+        #expect(main.count == 2 * 28 + 19)
+        #expect(config.settings.defaultLayout == .tiles)
         #expect(Set(config.modes.keys) == ["main", "resize", "service", "anim"])
         #expect(main
             .contains { $0.chord == Chord(parsing: "alt-tab") && $0.commands == [.workspaceBackAndForth] })

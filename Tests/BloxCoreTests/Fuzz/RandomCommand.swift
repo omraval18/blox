@@ -50,9 +50,16 @@ enum RandomCommand {
         { .windowAppeared(window(&$0), app: pick(apps, &$0)) },
         { .windowDisappeared(window(&$0)) },
         { .focusChanged(window(&$0)) },
-        { .windowMinSize(
+        { .windowSizeLimits(
             window(&$0),
-            CGSize(width: 100 + Double($0.next() % 600), height: 100 + Double($0.next() % 500)),
+            SizeLimits(minimum: CGSize(
+                width: 100 + Double($0.next() % 600),
+                height: 100 + Double($0.next() % 500),
+            )),
+        ) },
+        { .windowSizeLimits(
+            window(&$0),
+            SizeLimits(maximum: CGSize(width: 200 + Double($0.next() % 900), height: 0)),
         ) },
         { .monitorsChanged(monitors(&$0)) },
         { .focus(pick(Direction.allCases, &$0)) },

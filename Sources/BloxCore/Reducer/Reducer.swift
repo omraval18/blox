@@ -16,7 +16,7 @@ extension State {
         case let .windowAppeared(id, app): addWindow(id, app: app)
         case let .windowDisappeared(id): removeWindow(id)
         case let .focusChanged(id): setFocus(id)
-        case let .windowMinSize(id, size): learnMinSize(id, size)
+        case let .windowSizeLimits(id, limits): learnSizeLimits(id, limits)
         case let .monitorsChanged(monitors): applyMonitors(monitors)
         case let .focus(direction): focusNeighbor(direction)
         case let .move(direction): moveNeighbor(direction)

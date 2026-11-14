@@ -38,15 +38,16 @@ extension WindowSystem {
         }
     }
 
-    /// Localized name of the app owning a window, for the workspace bar.
-    public func appName(of id: WindowID) -> String? {
-        windows[id].flatMap { NSRunningApplication(processIdentifier: $0.pid)?.localizedName }
+    /// Process owning a window, for the workspace menu's app names and icons.
+    public func owner(of id: WindowID) -> pid_t? {
+        windows[id]?.pid
     }
 
     func release(_ element: AXUIElement) {
         guard let id = ids.removeValue(forKey: element) else { return }
         windows.removeValue(forKey: id)
         parked.removeValue(forKey: id)
+        refusesParking.remove(id)
         newWindows.remove(id)
         animator.forget(id)
         border.remove(id)
@@ -58,6 +59,7 @@ extension WindowSystem {
         case let .created(element), let .restored(element): adoptSoon(element)
         case let .destroyed(element), let .minimized(element): release(element)
         case let .focused(element): reportFocus(element)
+        case let .reshaped(element): ids[element].map(reshaped)
         }
     }
 }

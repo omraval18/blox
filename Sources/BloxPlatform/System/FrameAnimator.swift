@@ -80,6 +80,7 @@ final class FrameAnimator: NSObject {
             window.setFrame(frame)
             current[id] = frame
             onFrame?(id, frame)
+            CATransaction.flush()
             onSettled?(window, frame)
         case .park:
             window.move(to: Displays.parkingPoint())
@@ -99,9 +100,14 @@ final class FrameAnimator: NSObject {
     }
 
     /// Progress is measured at the moment the frame will be shown, not when this callback runs.
+    /// Each window's overlay is updated and pushed to the screen right after that window moved,
+    /// not after every app has answered: asking an app to move blocks until it does.
     @objc private func tick(_ link: CADisplayLink) {
-        for (id, track) in tracks {
-            advance(id, track, at: link.targetTimestamp)
+        let steps = tracks.compactMap { id, track in step(id, track, at: link.targetTimestamp) }
+        for (track, frame) in steps {
+            track.window.setStep(frame, resizing: track.from.size != track.to.size)
+            onFrame?(track.window.id, frame)
+            CATransaction.flush()
         }
         if tracks.isEmpty {
             link.invalidate()
@@ -109,19 +115,18 @@ final class FrameAnimator: NSObject {
         }
     }
 
-    private func advance(_ id: WindowID, _ track: AnimationTrack, at time: CFTimeInterval) {
-        let progress = max(time - track.start, 0) / track.timing.duration
-        guard progress < 1 else {
+    /// The frame `track` should show at `time`, or nil when it has nothing new to show (it landed, or
+    /// the frame repeats: frames are whole points, so the tail of an ease-out often does).
+    private func step(_ id: WindowID, _ track: AnimationTrack, at time: CFTimeInterval)
+        -> (track: AnimationTrack, frame: CGRect)? {
+        let (frame, done) = track.position(at: time)
+        guard !done else {
             tracks.removeValue(forKey: id)
             arrive(track.window, at: track.to, track.finish)
-            return
+            return nil
         }
-        let eased = track.timing.curve.value(at: progress)
-        let frame = track.from.interpolated(to: track.to, progress: eased)
-        // Frames are whole points, so the tail of an ease-out often repeats one: skip the app round trip.
-        guard frame != current[id] else { return }
-        track.window.setStep(frame, resizing: track.from.size != track.to.size)
+        guard frame != current[id] else { return nil }
         current[id] = frame
-        onFrame?(id, frame)
+        return (track, frame)
     }
 }

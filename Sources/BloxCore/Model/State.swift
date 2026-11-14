@@ -8,8 +8,8 @@ public struct State: Equatable, Sendable {
     /// Active binding set (`main` unless a mode such as `resize` was entered).
     public var mode = "main"
     var previousWorkspace: String?
-    /// Smallest size each window has shown it will accept; only ever grows.
-    public internal(set) var minSizes: [WindowID: CGSize] = [:]
+    /// Sizes each window has shown it will accept; minimums only grow, maximums only shrink.
+    public internal(set) var sizeLimits: [WindowID: SizeLimits] = [:]
 
     public init(settings: Settings = Settings()) {
         self.settings = settings

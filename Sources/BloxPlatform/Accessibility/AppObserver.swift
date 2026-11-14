@@ -40,6 +40,8 @@ final class AppObserver {
             kAXUIElementDestroyedNotification,
             kAXWindowMiniaturizedNotification,
             kAXWindowDeminiaturizedNotification,
+            kAXMovedNotification,
+            kAXResizedNotification,
         ] {
             unsafe AXObserverAddNotification(observer, window, name as CFString, context)
         }
@@ -56,6 +58,7 @@ final class AppObserver {
         case kAXFocusedWindowChangedNotification: onEvent(.focused(element))
         case kAXWindowMiniaturizedNotification: onEvent(.minimized(element))
         case kAXWindowDeminiaturizedNotification: onEvent(.restored(element))
+        case kAXMovedNotification, kAXResizedNotification: onEvent(.reshaped(element))
         default: break
         }
     }

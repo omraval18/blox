@@ -5,8 +5,8 @@ public enum Command: Equatable, Sendable {
     case windowAppeared(WindowID, app: String = "")
     case windowDisappeared(WindowID)
     case focusChanged(WindowID)
-    /// A window stayed larger than the frame it was given: its minimum size.
-    case windowMinSize(WindowID, CGSize)
+    /// A window settled larger (minimum) or smaller (maximum) than the frame it was given.
+    case windowSizeLimits(WindowID, SizeLimits)
     case monitorsChanged([Monitor])
     // User actions.
     case focus(Direction)

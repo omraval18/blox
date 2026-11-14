@@ -45,7 +45,7 @@ extension WindowSystem {
 
     private func place(_ id: WindowID, _ frame: CGRect) {
         let wasParked = parked.removeValue(forKey: id) != nil
-        guard let window = windows[id] else { return }
+        guard let window = windows[id], !adoption.hold(id, frame) else { return }
         if wasParked, let arrival = slideIn(to: frame) {
             // A window still sliding out turns around from where it is.
             let start = animator.destination(of: id) == nil ? arrival.start : nil
@@ -58,8 +58,17 @@ extension WindowSystem {
         }
     }
 
+    /// Applies the frames collected while adopting existing windows: once each, without animation.
+    func placePending() {
+        for (id, frame) in adoption.finish() {
+            newWindows.remove(id)
+            windows[id].map { animator.move($0, to: frame, timing: nil) }
+        }
+    }
+
     private func park(_ id: WindowID) {
         guard let window = windows[id], parked[id] == nil else { return }
+        adoption.drop(id)
         newWindows.remove(id)
         let moving = animator.destination(of: id)
         guard let actual = window.frame ?? animator.frame(of: id) else { return }
@@ -70,7 +79,12 @@ extension WindowSystem {
             return window.move(to: Displays.parkingPoint())
         }
         animator.record(id, actual)
-        animator.move(window, to: leave.frame, timing: leave.timing, finish: .park)
+        animator.move(
+            window,
+            to: leave.frame,
+            timing: leave.timing,
+            finish: .park(leaving: Displays.screen(containing: actual)),
+        )
     }
 
     private func unpark(_ id: WindowID) {
@@ -83,5 +97,6 @@ extension WindowSystem {
         window.setFrame(frame)
         animator.record(id, frame)
         followBorder(id, frame)
+        border.settle(id)
     }
 }

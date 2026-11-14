@@ -28,14 +28,26 @@ enum Displays {
         return CGRect(x: rect.minX, y: height - rect.maxY, width: rect.width, height: rect.height)
     }
 
-    /// Size of the screen showing most of `rect` (top-left space): how far a window must travel to
-    /// leave it.
-    static func screenSize(containing rect: CGRect) -> CGSize {
+    /// The screen holding the centre of `rect`, in top-left space: what a sliding window leaves.
+    static func screen(containing rect: CGRect) -> CGRect {
         let center = appKitRect(rect)
         let point = CGPoint(x: center.midX, y: center.midY)
         let screen = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.screens.first
-        return screen?.frame.size ?? CGSize(width: 1440, height: 900)
+        return screen.map { appKitRect($0.frame) } ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
     }
+
+    /// Whether more than a sliver of `rect` (top-left space) is on some screen. macOS keeps part of
+    /// every window on screen, so "hidden" means only a sliver remains visible.
+    static func isShowing(_ rect: CGRect) -> Bool {
+        NSScreen.screens.contains { screen in
+            let visible = appKitRect(screen.frame).intersection(rect)
+            return visible.width > sliver && visible.height > sliver
+        }
+    }
+
+    /// More visible than this, a window counts as showing. macOS clamps windows that leave the
+    /// screen so that 40 pt stay visible.
+    static let sliver = 48.0
 
     /// Bottom-right corner of all screens combined: where hidden windows are parked.
     static func parkingPoint() -> CGPoint {

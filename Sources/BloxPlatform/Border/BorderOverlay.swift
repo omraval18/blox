@@ -36,6 +36,11 @@ final class BorderOverlay {
         }
     }
 
+    /// Its window stopped moving: shrink the ring's panel back to the window.
+    func settle(_ id: WindowID) {
+        rings[id]?.settle()
+    }
+
     func raise(_ id: WindowID) {
         rings[id]?.raise(above: id.rawValue)
     }

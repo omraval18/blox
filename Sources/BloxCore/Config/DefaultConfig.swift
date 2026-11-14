@@ -10,7 +10,7 @@ public extension Config {
     # smart = true     # no gaps around a lone window
 
     [layout]
-    default = "dwindle"   # dwindle | primary | monocle
+    default = "dwindle"   # dwindle | tiles | primary | monocle
     ratio = 0.5
 
     [focus]

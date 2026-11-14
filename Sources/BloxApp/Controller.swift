@@ -15,11 +15,11 @@ final class Controller {
     private var watcher: ConfigWatcher?
     private var server: SocketServer?
     private lazy var system = WindowSystem { [weak self] in self?.dispatch($0) }
-    private lazy var menu = StatusMenu(
-        onReload: { [weak self] in _ = self?.reloadConfig() },
-        onOpenConfig: { [weak self] in self?.openConfig() },
-        onSwitch: { [weak self] in self?.dispatch(.switchWorkspace($0)) },
-    )
+    private lazy var menu = StatusMenu(actions: StatusMenuActions(
+        reload: { [weak self] in _ = self?.reloadConfig() },
+        openConfig: { [weak self] in self?.openConfig() },
+        switchTo: { [weak self] in self?.dispatch(.switchWorkspace($0)) },
+    ))
     private lazy var hotkeys = HotkeyCenter { [weak self] in self?.runBinding($0) }
 
     func start() {
@@ -89,10 +89,11 @@ final class Controller {
         config.modes[state.mode] ?? []
     }
 
+    /// Workspaces in use (holding windows or on a display), each with its apps listed once.
     private func workspaceRows() -> [WorkspaceRow] {
-        state.overview(including: config.workspaceNames).map { info in
-            var seen = Set<String>()
-            let apps = info.windows.compactMap { system.appName(of: $0) }.filter { seen.insert($0).inserted }
+        state.overview().map { info in
+            var seen = Set<pid_t>()
+            let apps = info.windows.compactMap(system.owner).filter { seen.insert($0).inserted }
             return WorkspaceRow(info: info, apps: apps)
         }
     }

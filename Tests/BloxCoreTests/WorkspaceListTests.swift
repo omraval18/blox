@@ -20,4 +20,17 @@ struct WorkspaceListTests {
         """
         #expect(try Config(parsing: text).workspaceNames == ["1", "B", "Z"])
     }
+
+    @Test func `overview lists occupied and visible workspaces`() {
+        let (state, _) = run([
+            .windowAppeared(id(1)),
+            .switchWorkspace("B"),
+            .windowAppeared(id(2)),
+            .switchWorkspace("T"),
+        ])
+        #expect(state.overview().map(\.name) == ["1", "B", "T"])
+        #expect(state.overview().map(\.isFocused) == [false, false, true])
+        #expect(state.overview().first?.windows == [id(1)])
+        #expect(state.overview().map(\.isVisible) == [false, false, true])
+    }
 }

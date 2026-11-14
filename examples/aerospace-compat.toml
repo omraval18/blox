@@ -13,7 +13,7 @@ outer = 0
 # smart = true          # no gaps around a lone window (Hyprland's no_gaps_when_only)
 
 [layout]
-default = "dwindle"
+default = "tiles"   # AeroSpace default: one row of full-height columns
 ratio = 0.5
 
 # Like AeroSpace's on-focus-changed = move-mouse window-lazy-center.
@@ -68,7 +68,8 @@ slow = "0 0.85 0.3 1"
 "com.mitchellh.ghostty" = "workspace T"
 
 [bindings]
-"alt-slash" = "layout dwindle"
+"alt-slash" = "layout tiles"
+"alt-shift-slash" = "layout dwindle"
 "alt-comma" = "layout monocle"
 "alt-shift-comma" = "layout primary"
 "alt-h" = "focus left"

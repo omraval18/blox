@@ -29,9 +29,27 @@ extension WindowSystem {
         border.raise(id)
     }
 
+    /// An animation landed: the ring hugs the window's real frame (an app that refused the size
+    /// sends no notification when its size does not change), and its size limits are checked.
+    func settled(_ window: AXWindow, _ target: CGRect) {
+        fitBorder(window)
+        checkSizeLimits(window, target)
+    }
+
+    /// Fits a shown window's ring to where the window really is.
+    func fitBorder(_ window: AXWindow) {
+        guard parked[window.id] == nil else { return }
+        if let actual = window.frame {
+            border.update(window.id, frame: actual)
+        }
+        border.settle(window.id)
+    }
+
+    /// Called right after a window was asked to take `frame`. The ring goes where the window
+    /// really is, which the window server knows; `frame` is only the fallback.
     func followBorder(_ id: WindowID, _ frame: CGRect) {
         if parked[id] == nil {
-            border.update(id, frame: frame)
+            border.update(id, frame: WindowServer.bounds(of: id) ?? frame)
         }
     }
 }
