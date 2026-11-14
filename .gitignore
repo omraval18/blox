@@ -3,3 +3,6 @@
 *.xcodeproj/xcuserdata/
 .DS_Store
 dist/
+
+# Internal agent/owner notes, never pushed
+docs/HANDOFF.md
