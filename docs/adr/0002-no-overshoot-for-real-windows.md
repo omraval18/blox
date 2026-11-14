@@ -20,5 +20,9 @@ start for curves that dip below zero.
 
 - No overlap with neighbours and no edge reveal during moves; a window stays within the union of
   its start and end frames, so its ring panel grows at most once per animation.
-- Overshooting presets end slightly earlier in effect: the tail of the animation holds at the target.
+- Overshooting presets end earlier: `Timing.arrival` is the first moment the curve reaches 1 (found
+  once per `Timing`), travel holds at 1 from then on, and the animator ends the track there instead
+  of at `duration` (a `wind` move arrived at 0.08 s of 0.28 s). So the ring panel shrinks back, the
+  reshape recheck resumes and the size-limit check runs as soon as the window lands. A curve that
+  rises above 1 and dips back below before the end does not pull the window back: first arrival wins.
 - `Curve.value(at:)` is unchanged, so curve maths and config parsing are unaffected.

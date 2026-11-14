@@ -61,7 +61,7 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
 - Verified by an offscreen render of the views in light and dark; the live menu (highlight via
   `menu(_:willHighlight:)`, click via `performActionForItem`, key equivalents) is unverified.
 
-## Live-test fixes (2026-11-14, uncommitted)
+## Live-test fixes (2026-11-14)
 
 - Border rings follow the window's real frame: windows subscribe to AX moved/resized, and
   `WindowSystem.reshaped` redraws the ring when Blox is not animating that window. Before, rings
@@ -109,6 +109,10 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   reports for one frame (16 ms) per window; `Ring.move`/`settle` skip no-op work. Not seen on
   screen by the assistant: this terminal lacks Screen Recording permission, and the owner's
   recordings were temp files deleted before they could be read.
+- Animations end on arrival (slice 1). `Timing.arrival` (Core, `Timing.swift`) is the first time
+  the clamped curve reaches 1; `AnimationTrack.position(at:)` reports done there instead of at
+  `duration`, so a `wind` move ends at ~0.08 s of 0.28 s: the ring panel settles, reshape rechecks
+  and the size-limit check run as soon as the window lands. Unverified on real windows.
 
 ## Verified vs not verified
 

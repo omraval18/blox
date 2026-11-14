@@ -19,12 +19,13 @@ struct AnimationTrack {
     let timing: Timing
     let finish: Finish
 
-    /// Where the window should be at `time`, and whether the glide is over: its time is up, or a
-    /// parking window has (nearly) left its screen and need not travel further.
+    /// Where the window should be at `time`, and whether the glide is over: it has arrived (an
+    /// overshooting curve gets there before its time is up), or a parking window has (nearly) left
+    /// its screen and need not travel further.
     func position(at time: CFTimeInterval) -> (frame: CGRect, done: Bool) {
         let elapsed = max(time - start, 0)
         let frame = from.interpolated(to: to, progress: timing.travel(after: elapsed))
-        return (frame, elapsed >= timing.duration || hasLeft(at: frame))
+        return (frame, elapsed >= timing.arrival || hasLeft(at: frame))
     }
 
     private func hasLeft(at frame: CGRect) -> Bool {
