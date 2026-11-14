@@ -71,7 +71,7 @@ extension WindowSystem {
         adoption.drop(id)
         newWindows.remove(id)
         let moving = animator.destination(of: id)
-        guard let actual = window.frame ?? animator.frame(of: id) else { return }
+        guard let actual = realFrame(of: window) ?? animator.frame(of: id) else { return }
         parked[id] = moving ?? actual
         border.remove(id)
         guard let leave = slideOut(from: actual) else {

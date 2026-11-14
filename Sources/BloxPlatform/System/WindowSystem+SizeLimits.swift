@@ -13,7 +13,7 @@ extension WindowSystem {
         Task {
             try? await Task.sleep(for: .milliseconds(250))
             guard windows[window.id] != nil, parked[window.id] == nil,
-                  animator.target(of: window.id) == target, let actual = window.frame else { return }
+                  animator.target(of: window.id) == target, let actual = realFrame(of: window) else { return }
             // Some apps finish resizing after the animation lands.
             fitBorder(window)
             let limits = Self.limits(actual: actual.size, target: target.size)

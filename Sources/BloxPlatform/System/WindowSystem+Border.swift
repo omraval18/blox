@@ -39,7 +39,7 @@ extension WindowSystem {
     /// Fits a shown window's ring to where the window really is.
     func fitBorder(_ window: AXWindow) {
         guard parked[window.id] == nil else { return }
-        if let actual = window.frame {
+        if let actual = realFrame(of: window) {
             border.update(window.id, frame: actual)
         }
         border.settle(window.id)

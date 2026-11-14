@@ -9,7 +9,7 @@ extension WindowSystem {
         windows[window.id] = window
         newWindows.insert(window.id)
         // New windows glide from wherever the app opened them to their tile.
-        window.frame.map { animator.record(window.id, $0) }
+        realFrame(of: window).map { animator.record(window.id, $0) }
         ids[element] = window.id
         observers[window.pid]?.watch(element)
         onCommand(.windowAppeared(window.id, app: app.bundleIdentifier ?? ""))
@@ -36,6 +36,12 @@ extension WindowSystem {
             onCommand(.focusChanged($0))
             restackBorder($0)
         }
+    }
+
+    /// Where a window really is, from the window server (~0.1 ms, no round trip to its app, so a
+    /// slow or hung app cannot stall it); Accessibility only when the window server has no answer.
+    func realFrame(of window: AXWindow) -> CGRect? {
+        WindowServer.bounds(of: window.id) ?? window.frame
     }
 
     /// Process owning a window, for the workspace menu's app names and icons.

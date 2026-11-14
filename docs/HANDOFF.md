@@ -113,6 +113,12 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   the clamped curve reaches 1; `AnimationTrack.position(at:)` reports done there instead of at
   `duration`, so a `wind` move ends at ~0.08 s of 0.28 s: the ring panel settles, reshape rechecks
   and the size-limit check run as soon as the window lands. Unverified on real windows.
+- Geometry reads from the window server (slice 2). `WindowSystem.realFrame(of:)`
+  (`WindowSystem+Windows`) asks `WindowServer.bounds` first (~0.1 ms, no app round trip) and AX
+  only as a fallback; used by `park`, both reads in `recheck`, `fitBorder`, `checkSizeLimits` and
+  `adopt`. Attribute reads, `refreshBorder` and the mouse-follows-focus read still use AX.
+  Unverified: whether the window server reflects a park move immediately in `recheck`'s second
+  read (if it lags, the window is just treated as refusing parking, which is the cautious side).
 
 ## Verified vs not verified
 

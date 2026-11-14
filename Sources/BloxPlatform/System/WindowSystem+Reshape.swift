@@ -23,7 +23,7 @@ extension WindowSystem {
     ///   that keeps moving it back.
     private func recheck(_ id: WindowID) {
         guard animator.destination(of: id) == nil, let window = windows[id],
-              let frame = window.frame else { return }
+              let frame = realFrame(of: window) else { return }
         guard parked[id] != nil else {
             refusesParking.remove(id)
             border.update(id, frame: frame)
@@ -31,7 +31,7 @@ extension WindowSystem {
         }
         guard Displays.isShowing(frame), refusesParking.insert(id).inserted else { return }
         window.move(to: Displays.parkingPoint())
-        if window.frame.map(Displays.isShowing) == false {
+        if realFrame(of: window).map(Displays.isShowing) == false {
             refusesParking.remove(id)
         }
     }
