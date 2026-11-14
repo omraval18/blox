@@ -11,7 +11,7 @@ enum Tiling {
         minimums: [CGSize] = [],
     ) -> [CGRect] {
         let half = gaps.inner / 2
-        let padded = area.insetBy(dx: gaps.outer - half, dy: gaps.outer - half)
+        let padded = gaps.padded(area).insetBy(dx: -half, dy: -half)
         let clamped = min(max(workspace.ratio, ratioRange.lowerBound), ratioRange.upperBound)
         return workspace.layout.algorithm
             .frames(count: workspace.tiled.count, in: padded, ratio: clamped, minimums: minimums)

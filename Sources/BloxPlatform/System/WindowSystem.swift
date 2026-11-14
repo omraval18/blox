@@ -22,6 +22,10 @@ public final class WindowSystem {
 
     let border = BorderOverlay()
     var focusedID: WindowID?
+    /// Set while executing the effects of a workspace switch.
+    var slide: Direction?
+    /// Windows that have not been placed yet: their first placement may play the open animation.
+    var newWindows: Set<WindowID> = []
     private var tokens: [any NSObjectProtocol] = []
 
     public init(onCommand: @escaping @MainActor (Command) -> Void) {
@@ -50,6 +54,10 @@ public final class WindowSystem {
 
     func detach(_ pid: pid_t) {
         observers.removeValue(forKey: pid)?.stop()
+        releaseWindows(of: pid)
+    }
+
+    func releaseWindows(of pid: pid_t) {
         for window in windows.values where window.pid == pid {
             release(window.element)
         }
@@ -58,10 +66,6 @@ public final class WindowSystem {
     func reportFrontmostFocus() {
         guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
               let element = observers[pid]?.focusedWindow else { return }
-        adopt(element)
-        ids[element].map {
-            onCommand(.focusChanged($0))
-            restackBorder($0)
-        }
+        reportFocus(element)
     }
 }

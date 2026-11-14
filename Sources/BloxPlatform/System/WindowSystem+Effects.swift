@@ -4,12 +4,15 @@ import CoreGraphics
 extension WindowSystem {
     /// Performs what the reducer asked for. Windows that vanished in the meantime are skipped.
     public func execute(_ effects: [Effect]) {
+        defer { slide = nil }
         for effect in effects {
             switch effect {
+            case let .slide(direction): slide = direction
             case let .place(id, frame): place(id, frame)
             case let .park(id): park(id)
             case let .unpark(id): unpark(id)
             case let .focus(id): focus(id)
+            case let .close(id): windows[id]?.close()
             case let .release(id): border.remove(id)
             case let .run(line): run(line)
             }
@@ -41,22 +44,40 @@ extension WindowSystem {
     }
 
     private func place(_ id: WindowID, _ frame: CGRect) {
-        parked.removeValue(forKey: id)
+        let wasParked = parked.removeValue(forKey: id) != nil
         guard let window = windows[id] else { return }
-        animator.move(window, to: frame, using: settings.animation)
+        let reversing = animator.destination(of: id) != nil
+        if wasParked, !reversing, let arrival = slideIn(to: frame) {
+            animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
+        } else if newWindows.remove(id) != nil, let arrival = entrance(to: frame) {
+            animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
+        } else {
+            animator.move(window, to: frame, timing: settings.animation.moveTiming)
+        }
     }
 
     private func park(_ id: WindowID) {
-        guard let window = windows[id], parked[id] == nil, let frame = window.frame else { return }
-        parked[id] = frame
-        animator.forget(id)
+        guard let window = windows[id], parked[id] == nil else { return }
+        newWindows.remove(id)
+        let moving = animator.destination(of: id)
+        guard let actual = window.frame ?? animator.frame(of: id) else { return }
+        parked[id] = moving ?? actual
         border.remove(id)
-        window.move(to: Displays.parkingPoint())
+        guard let leave = slideOut(from: actual) else {
+            animator.forget(id)
+            return window.move(to: Displays.parkingPoint())
+        }
+        animator.record(id, actual)
+        animator.move(window, to: leave.frame, timing: leave.timing, finish: .park)
     }
 
     private func unpark(_ id: WindowID) {
-        guard let frame = parked.removeValue(forKey: id) else { return }
-        windows[id]?.setFrame(frame)
+        guard let frame = parked.removeValue(forKey: id), let window = windows[id] else { return }
+        if let arrival = slideIn(to: frame) {
+            return animator.move(window, to: frame, timing: arrival.timing, from: arrival.start)
+        }
+        animator.forget(id)
+        window.setFrame(frame)
         animator.record(id, frame)
         followBorder(id, frame)
     }

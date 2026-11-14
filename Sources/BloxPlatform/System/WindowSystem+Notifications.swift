@@ -11,6 +11,14 @@ extension WindowSystem {
             observe(NSWorkspace.didTerminateApplicationNotification, on: workspace) { system, pid in
                 pid.map(system.detach)
             },
+            // Hidden (Cmd-H) apps leave the layout, as in AeroSpace, and rejoin when shown again.
+            observe(NSWorkspace.didHideApplicationNotification, on: workspace) { system, pid in
+                pid.map(system.releaseWindows)
+            },
+            observe(NSWorkspace.didUnhideApplicationNotification, on: workspace) { system, pid in
+                pid.map(system.attach)
+                pid.flatMap { system.observers[$0]?.windows }?.forEach(system.adopt)
+            },
             observe(NSWorkspace.didActivateApplicationNotification, on: workspace) { system, _ in
                 system.reportFrontmostFocus()
             },

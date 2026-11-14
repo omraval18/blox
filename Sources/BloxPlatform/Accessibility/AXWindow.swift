@@ -23,8 +23,13 @@ struct AXWindow {
         AXAttribute.string(element, kAXRoleAttribute) == kAXWindowRole
             && AXAttribute.string(element, kAXSubroleAttribute) == kAXStandardWindowSubrole
             && !AXAttribute.flag(element, kAXMinimizedAttribute)
-            && !AXAttribute.flag(element, "AXFullScreen")
+            && !isFullScreen
             && AXAttribute.isSettable(element, kAXSizeAttribute)
+    }
+
+    /// Native fullscreen windows live on their own Space; tiling them would only fight macOS.
+    var isFullScreen: Bool {
+        AXAttribute.flag(element, "AXFullScreen")
     }
 
     var frame: CGRect? {
@@ -51,6 +56,12 @@ struct AXWindow {
 
     func move(to point: CGPoint) {
         AXAttribute.set(element, kAXPositionAttribute, point: point)
+    }
+
+    /// Presses the window's close button, as a click would.
+    func close() {
+        AXAttribute.element(element, kAXCloseButtonAttribute)
+            .map { _ = AXUIElementPerformAction($0, kAXPressAction as CFString) }
     }
 
     func raise() {

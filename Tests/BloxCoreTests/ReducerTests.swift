@@ -69,10 +69,10 @@ struct ReducerTests {
     @Test func `switching workspace parks and restores`() {
         let base = run([.windowAppeared(id(1))]).0
         let (away, parked) = reduce(base, .switchWorkspace("2"))
-        #expect(parked == [.park(id(1))])
+        #expect(parked == [.slide(.left), .park(id(1))])
         #expect(away.focusedWindow == nil)
         let (_, restored) = reduce(away, .switchWorkspace("1"))
-        #expect(restored == [.place(id(1), screen), .focus(id(1))])
+        #expect(restored == [.slide(.right), .place(id(1), screen), .focus(id(1))])
     }
 
     @Test func `move to workspace parks window and focuses next`() {
@@ -100,7 +100,7 @@ struct ReducerTests {
         let (away, _) = reduce(run([.windowAppeared(id(1))]).0, .switchWorkspace("2"))
         let (state, effects) = reduce(away, .focusChanged(id(1)))
         #expect(state.focusedWorkspaceName == "1")
-        #expect(effects == [.place(id(1), screen)])
+        #expect(effects == [.slide(.right), .place(id(1), screen)])
     }
 
     @Test func `monitor changes keep workspaces and assign new ones`() {

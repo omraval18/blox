@@ -9,6 +9,8 @@
 [gaps]
 inner = 18
 outer = 0
+# outer-top = 32        # per-edge override of outer, e.g. room for a custom bar
+# smart = true          # no gaps around a lone window (Hyprland's no_gaps_when_only)
 
 [layout]
 default = "dwindle"
@@ -38,6 +40,18 @@ angle = 45
 #   f fast  n snappy  x off   (esc to leave)
 [animation]
 style = "hyprdots"
+
+# Hyprland's windowsIn: how a new window arrives. slide (glide from where the app opened it)
+# | popin [percent] (grow from the centre of its tile) | off. duration and curve are optional
+# and default to the values above.
+[animation.open]
+style = "slide"
+
+# Hyprland's workspaces: windows glide off one edge and the new workspace's windows in from the
+# other. slide | slidevert | off. Shorter than window moves, so switching stays quick.
+[animation.workspaces]
+style = "slide"
+duration = 0.3
 
 # Your own beziers, Hyprland-style: name = "x1 y1 x2 y2". Use one with  curve = "<name>"
 # under [animation]. These come straight from configs by end-4, JaKooLit and linuxmobile.

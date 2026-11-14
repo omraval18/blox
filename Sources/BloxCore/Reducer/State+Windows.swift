@@ -69,7 +69,7 @@ extension State {
         if name == "off" {
             settings.animation.enabled = false
         } else if let style = AnimationStyle.named(name) {
-            settings.animation = style
+            settings.animation.applyPreset(style)
         }
     }
 }

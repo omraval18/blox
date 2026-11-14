@@ -4,7 +4,7 @@ public extension State {
     func overview(including known: [String] = []) -> [WorkspaceInfo] {
         let shown = Set(monitors.map(\.workspace))
         let occupied = workspaces.filter { !$0.value.windows.isEmpty }.keys
-        return Set(known).union(occupied).union(shown).sorted().map { name in
+        return Set(known).union(occupied).union(shown).sorted(by: WorkspaceOrder.precedes).map { name in
             WorkspaceInfo(
                 name: name,
                 windows: workspaces[name]?.windows ?? [],

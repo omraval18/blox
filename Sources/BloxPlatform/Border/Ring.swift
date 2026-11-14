@@ -2,9 +2,8 @@ import AppKit
 import BloxCore
 import QuartzCore
 
-/// One click-through ring along the inside edge of one window, stacked directly above that window so menus
-/// and
-/// other windows still cover it. It changes only when its window moves or its style does.
+/// One click-through ring along the inside edge of one window, stacked directly above that window so
+/// menus and other windows still cover it. It changes only when its window moves or its style does.
 @MainActor
 final class Ring {
     private let panel: RingPanel
@@ -63,9 +62,15 @@ final class Ring {
         panel.order(.above, relativeTo: Int(windowNumber))
     }
 
+    /// Only a resize needs the ring redrawn; a plain move just repositions the panel.
     func move(to frame: CGRect) {
+        let resized = frame.size != windowFrame.size
         windowFrame = frame
-        layout()
+        if resized {
+            layout()
+        } else {
+            panel.setFrameOrigin(Displays.appKitRect(frame).origin)
+        }
     }
 
     func close() {

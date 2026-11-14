@@ -20,6 +20,7 @@ public enum Command: Equatable, Sendable {
     case balance
     case toggleFloating
     case toggleFullscreen
+    case close
     case setMode(String)
     case setAnimation(String)
     case exec(String)

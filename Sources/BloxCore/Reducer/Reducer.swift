@@ -3,7 +3,11 @@ public func reduce(_ state: State, _ command: Command) -> (State, [Effect]) {
     var next = state
     next.apply(command)
     let layout = PlacementDiff.effects(from: state.placements(), to: next.placements())
-    return (next, layout + ExtraEffects.effects(for: command, from: state, to: next))
+    return (
+        next,
+        WorkspaceSlide.effects(from: state, to: next) + layout
+            + ExtraEffects.effects(for: command, from: state, to: next),
+    )
 }
 
 extension State {
@@ -28,7 +32,7 @@ extension State {
         case let .setMode(name): mode = name
         case let .setAnimation(name): applyAnimation(named: name)
         case let .updateSettings(settings): self.settings = settings
-        case .exec, .retile, .reloadConfig: break
+        case .exec, .retile, .reloadConfig, .close: break
         }
     }
 }

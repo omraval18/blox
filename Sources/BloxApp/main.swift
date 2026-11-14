@@ -2,12 +2,6 @@ import AppKit
 import BloxPlatform
 import Foundation
 
-guard AccessibilityPermission.request() else {
-    FileHandle.standardError
-        .write(Data("Blox needs Accessibility access: enable it in System Settings, then relaunch.\n".utf8))
-    exit(1)
-}
-
 let application = NSApplication.shared
 application.setActivationPolicy(.accessory)
 
@@ -25,7 +19,14 @@ let signals = [SIGINT, SIGTERM].map { number in
     return source
 }
 
-controller.start()
+/// Without Accessibility access Blox waits for the grant (the system prompt is already showing)
+/// instead of exiting, so enabling it in System Settings is all it takes.
+let grantWatcher = AccessibilityPermission.request()
+    ? nil : AccessibilityGrantWatcher { controller.start() }
+if grantWatcher == nil {
+    controller.start()
+}
+
 application.run()
 controller.stop()
-withExtendedLifetime(signals) {}
+withExtendedLifetime((signals, grantWatcher)) {}

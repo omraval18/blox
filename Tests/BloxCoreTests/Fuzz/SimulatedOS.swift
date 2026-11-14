@@ -30,7 +30,7 @@ struct SimulatedOS {
         case let .park(id): change(id, to: .parked, effect)
         case let .unpark(id), let .release(id): change(id, to: .unknown, effect)
         case let .focus(id): require(spots[id] != nil, "focus on dead window \(id.rawValue)")
-        case .run: break
+        case .run, .slide, .close: break
         }
     }
 

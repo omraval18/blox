@@ -6,6 +6,8 @@ public extension Config {
     [gaps]
     inner = 8
     outer = 8
+    # outer-top = 32   # per-edge override of outer (also outer-bottom, outer-left, outer-right)
+    # smart = true     # no gaps around a lone window
 
     [layout]
     default = "dwindle"   # dwindle | primary | monocle
@@ -28,6 +30,14 @@ public extension Config {
     enabled = false
     duration = 0.18
     curve = "snappy"   # a preset, a [curves] name, or "x1 y1 x2 y2"
+
+    # How a new window arrives: slide | popin [percent] | off. duration and curve are optional.
+    [animation.open]
+    style = "slide"
+
+    # How a workspace switch looks: slide | slidevert | off. duration and curve are optional.
+    [animation.workspaces]
+    style = "slide"
 
     # Your own bezier curves, as in Hyprland: name = "x1 y1 x2 y2"
     [curves]

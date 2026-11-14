@@ -89,6 +89,13 @@ inactive = "b4befecc 6c7086cc"  # omit to ring only the focused window
 [animation]
 style = "hyprdots"       # or: curve = "snappy" | "x1 y1 x2 y2"
 
+[animation.open]         # Hyprland's windowsIn: slide | popin [percent] | off
+style = "popin 85"
+
+[animation.workspaces]   # Hyprland's workspaces: slide | slidevert | off
+style = "slide"
+duration = 0.3           # each phase may set its own duration and curve
+
 [rules]
 "com.google.Chrome" = "workspace B"
 
@@ -98,7 +105,8 @@ style = "hyprdots"       # or: curve = "snappy" | "x1 y1 x2 y2"
 "alt-1" = "workspace 1"
 ```
 
-Sections: `[gaps] [layout] [focus] [border] [animation] [curves] [rules] [bindings] [mode.<name>]`.
+Sections: `[gaps] [layout] [focus] [border] [animation] [animation.open] [animation.workspaces] [curves] [rules] [bindings] [mode.<name>]`.
+Gaps also take `outer-top|bottom|left|right` (per-edge) and `smart = true` (no gaps around a lone window).
 Unknown keys are errors with line numbers. Modifiers: `alt`, `ctrl`, `shift`, `cmd`.
 Chain commands with `;`, for example `"alt-r" = "mode resize ; layout dwindle"`.
 
@@ -110,13 +118,15 @@ Used by bindings and the CLI (`blox <command>`):
 |---|---|
 | Focus and move | `focus <dir>`, `move <dir>` (left, right, up, down) |
 | Workspaces | `workspace <n>`, `move-to-workspace <n>`, `workspace-back-and-forth`, `move-workspace-to-monitor` |
-| Layout | `layout <name>`, `resize <delta>`, `balance`, `toggle-floating`, `fullscreen` |
+| Layout | `layout <name>`, `resize <delta>`, `balance`, `toggle-floating`, `fullscreen`, `close` |
 | Misc | `mode <name>`, `animation <style\|off>`, `exec <cmd>`, `retile`, `reload-config` |
 | Info | `status`, `version` |
 
 ## Behaviour and limits
 
 - Only standard, resizable windows are tiled; dialogs, panels and fixed-size windows are left alone.
+- Hidden (Cmd-H) apps leave the layout and rejoin when shown; windows that go native full screen leave it too.
+- Blox starts without Accessibility access and begins working the moment you grant it; no relaunch.
 - Turn off **Displays have separate Spaces** for several monitors. Avoid native Spaces and native full screen:
   Blox manages its own workspaces and only sees the current Space.
 - Animation moves real windows through Accessibility, so slow apps can look less smooth.
