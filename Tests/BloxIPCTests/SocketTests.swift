@@ -2,6 +2,8 @@
 import Foundation
 import Testing
 
+/// Serialized: binding narrows the process-wide umask, so two servers starting at once would race.
+@Suite(.serialized)
 struct SocketTests {
     private func temporaryPath() -> String {
         "/tmp/blox-test-\(UUID().uuidString.prefix(8)).sock"
