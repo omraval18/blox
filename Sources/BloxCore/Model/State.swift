@@ -8,8 +8,8 @@ public struct State: Equatable, Sendable {
     /// Active binding set (`main` unless a mode such as `resize` was entered).
     public var mode = "main"
     var previousWorkspace: String?
-    /// Smallest size each window has shown it will accept; only ever grows.
-    public internal(set) var minSizes: [WindowID: CGSize] = [:]
+    /// Sizes each window has shown it will accept; minimums only grow, maximums only shrink.
+    public internal(set) var sizeLimits: [WindowID: SizeLimits] = [:]
 
     public init(settings: Settings = Settings()) {
         self.settings = settings
@@ -31,7 +31,11 @@ public struct State: Equatable, Sendable {
     /// Applies `change` to the named workspace, creating it from the defaults if needed.
     mutating func update(_ name: String, _ change: (inout Workspace) -> Void) {
         var workspace = workspaces[name]
-            ?? Workspace(name: name, layout: settings.defaultLayout, ratio: settings.defaultRatio)
+            ?? Workspace(
+                name: name,
+                layout: settings.defaultLayout(for: name),
+                ratio: settings.defaultRatio(for: name),
+            )
         change(&workspace)
         workspaces[name] = workspace
     }

@@ -49,4 +49,12 @@ struct CurveTests {
         #expect(start.interpolated(to: end, progress: 1) == end)
         #expect(start.interpolated(to: end, progress: 0.5) == CGRect(x: 50, y: 25, width: 200, height: 150))
     }
+
+    @Test func `windows never travel past their target, even on overshooting curves`() {
+        let timing = Timing(duration: 1, curve: .wind)
+        #expect((0 ... 100).map { Double($0) / 100 }.contains { Curve.wind.value(at: $0) > 1 })
+        #expect((0 ... 100).allSatisfy { timing.travel(after: Double($0) / 100) <= 1 })
+        #expect(timing.travel(after: -1) == 0)
+        #expect(timing.travel(after: 2) == 1)
+    }
 }

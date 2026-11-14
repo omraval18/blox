@@ -12,6 +12,7 @@ usage: blox <command>
   toggle-floating                   float or tile the focused window
   retile                            re-apply the layout
   status                            show monitors and workspaces
+  stats                             animation frame counts and per-app answer times
   reload                            reload the config file
   version                           version of the running app
   --version                         version of this CLI

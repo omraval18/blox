@@ -25,28 +25,15 @@ public struct Config: Equatable, Sendable {
     }
 
     private mutating func apply(_ entry: TOMLEntry, in table: String, curves: [String: Curve]) throws {
-        switch (table, entry.key) {
-        case ("gaps", "inner"): settings.gaps.inner = try number(entry, in: 0 ... 200)
-        case ("gaps", "outer"): settings.gaps.outer = try number(entry, in: 0 ... 200)
-        case ("layout", "default"): settings.defaultLayout = try layout(entry)
-        case ("layout", "ratio"): settings.defaultRatio = try number(entry, in: Tiling.ratioRange)
-        case ("focus", "mouse-follows"): settings.mouseFollowsFocus = try flag(entry)
-        case ("animation", "style"): settings.animation = try style(entry)
-        case ("animation", "enabled"): settings.animation.enabled = try flag(entry)
-        case ("animation", "duration"): settings.animation.duration = try number(entry, in: 0.05 ... 1)
-        case ("animation", "curve"): settings.animation.curve = try curve(entry, curves)
-        case ("border", "enabled"): settings.border.enabled = try flag(entry)
-        case ("border", "width"): settings.border.width = try number(entry, in: 1 ... 20)
-        case ("border", "radius"): settings.border.radius = try number(entry, in: 0 ... 40)
-        case ("border", "angle"): settings.border.angle = try number(entry, in: 0 ... 360)
-        case ("border", "colors"): settings.border.colors = try colors(entry)
-        case ("border", "inactive"): settings.border.inactiveColors = try colors(entry)
-        case ("rules", _): settings.rules[entry.key] = try rule(entry)
-        default:
-            guard let mode = Self.modeName(forTable: table) else {
-                throw ConfigError(line: entry.line, message: "unknown setting '\(table).\(entry.key)'")
-            }
+        if try applySetting(entry, in: table, curves: curves) {
+            return
+        }
+        if table == "rules" {
+            settings.rules[entry.key] = try rule(entry)
+        } else if let mode = Self.modeName(forTable: table) {
             try modes[mode, default: []].append(binding(entry, mode: mode))
+        } else {
+            throw unknown(entry, in: table)
         }
     }
 

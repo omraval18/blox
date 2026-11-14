@@ -1,102 +1,112 @@
 import AppKit
 import BloxCore
 
-/// The menu bar item: the current workspace's name, and a menu listing every workspace with the
-/// apps in it (like AeroSpace's tray).
-/// Rebuilt only when something it shows changes; idle otherwise.
+/// The menu bar item: a pill with the current workspace, and a menu of the workspaces in use
+/// with their apps. Its items are built only when it opens; while closed, a state change costs at
+/// most a redraw of the pill.
 @MainActor
-final class StatusMenu: NSObject {
+final class StatusMenu: NSObject, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private let onReload: @MainActor () -> Void
-    private let onOpenConfig: @MainActor () -> Void
-    private let onSwitch: @MainActor (String) -> Void
+    private let menu = NSMenu()
+    private let actions: StatusMenuActions
     private var rows: [WorkspaceRow] = []
     private var mode = Config.mainMode
     private var error: String?
+    private var isOpen = false
 
-    init(
-        onReload: @escaping @MainActor () -> Void,
-        onOpenConfig: @escaping @MainActor () -> Void,
-        onSwitch: @escaping @MainActor (String) -> Void,
-    ) {
-        self.onReload = onReload
-        self.onOpenConfig = onOpenConfig
-        self.onSwitch = onSwitch
+    init(actions: StatusMenuActions) {
+        self.actions = actions
         super.init()
-        rebuild()
+        menu.delegate = self
+        menu.autoenablesItems = false
+        item.menu = menu
+        item.button?.imagePosition = .imageLeading
+        refresh()
     }
 
     func update(rows newRows: [WorkspaceRow]) {
         guard newRows != rows else { return }
         rows = newRows
-        rebuild()
+        refresh()
     }
 
-    /// Shows a config problem in the menu and flags the icon; `nil` clears it.
+    /// Shows a config problem in the menu and flags the item; `nil` clears it.
     func setError(_ message: String?) {
         guard message != error else { return }
         error = message
-        rebuild()
+        refresh()
     }
 
     /// The bar shows the active mode, so it is obvious when keys are rebound (e.g. `resize`).
     func setMode(_ name: String) {
         guard name != mode else { return }
         mode = name
-        rebuild()
+        refresh()
     }
 
-    private func rebuild() {
-        let current = rows.first { $0.info.isFocused }?.info.name ?? "▦"
-        item.button?
-            .title = current + (mode == Config.mainMode ? "" : " · \(mode)") + (error == nil ? "" : " !")
-        item.menu = makeMenu()
+    func menuNeedsUpdate(_: NSMenu) {
+        populate()
     }
 
-    private func makeMenu() -> NSMenu {
-        let menu = NSMenu()
+    func menuWillOpen(_: NSMenu) {
+        isOpen = true
+    }
+
+    func menuDidClose(_: NSMenu) {
+        isOpen = false
+    }
+
+    /// Custom row views draw their own highlight; native items are handled by the menu.
+    func menu(_ menu: NSMenu, willHighlight target: NSMenuItem?) {
+        for entry in menu.items {
+            (entry.view as? WorkspaceRowView)?.isHighlighted = entry === target
+        }
+    }
+
+    private var focusedRow: WorkspaceRow? {
+        rows.first { $0.info.isFocused }
+    }
+
+    private var customMode: String? {
+        mode == Config.mainMode ? nil : mode
+    }
+
+    private func refresh() {
+        guard let button = item.button else { return }
+        let name = focusedRow?.info.name ?? "–"
+        button.image = StatusBadge.image(name, filled: customMode == nil)
+        button.title = [customMode, error.map { _ in "!" }].compactMap(\.self).map { " " + $0 }.joined()
+        button.setAccessibilityLabel("Blox, workspace \(name)")
+        if isOpen {
+            populate()
+        }
+    }
+
+    private func populate() {
+        menu.removeAllItems()
         if let error {
-            let line = NSMenuItem(title: "Config error: \(error)", action: nil, keyEquivalent: "")
-            line.isEnabled = false
-            menu.addItem(line)
-            menu.addItem(.separator())
+            menu.addItem(viewItem(MenuErrorView(error)))
         }
-        for row in rows {
-            menu.addItem(workspaceItem(row))
-        }
-        if !rows.isEmpty {
-            menu.addItem(.separator())
-        }
-        menu.addItem(entry("Reload Config", #selector(reload)))
-        menu.addItem(entry("Open Config", #selector(openConfig)))
+        menu.addItem(viewItem(MenuHeaderView(row: focusedRow, mode: customMode)))
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Blox", action: #selector(NSApplication.terminate), keyEquivalent: "q")
-        return menu
+        menu.addItem(.sectionHeader(title: "Workspaces"))
+        rows.forEach { menu.addItem(workspaceItem($0)) }
+        menu.addItem(.separator())
+        menu.addItem(command("Reload Config", "arrow.clockwise", "r", #selector(reload)))
+        menu.addItem(command("Open Config…", "slider.horizontal.3", ",", #selector(openConfig)))
+        menu.addItem(.separator())
+        menu.addItem(command("Quit Blox", "power", "q", #selector(NSApplication.terminate), target: NSApp))
     }
 
-    private func workspaceItem(_ row: WorkspaceRow) -> NSMenuItem {
-        let apps = row.apps.isEmpty ? "" : " — " + row.apps.joined(separator: ", ")
-        let line = entry(row.info.name + apps, #selector(pick(_:)))
-        line.representedObject = row.info.name
-        line.state = row.info.isFocused ? .on : .off
-        return line
+    @objc func pick(_ sender: NSMenuItem) {
+        (sender.representedObject as? String).map(actions.switchTo)
     }
 
-    private func entry(_ title: String, _ action: Selector) -> NSMenuItem {
-        let entry = NSMenuItem(title: title, action: action, keyEquivalent: "")
-        entry.target = self
-        return entry
+    @objc func reload() {
+        actions.reload()
     }
 
-    @objc private func pick(_ sender: NSMenuItem) {
-        (sender.representedObject as? String).map(onSwitch)
-    }
-
-    @objc private func reload() {
-        onReload()
-    }
-
-    @objc private func openConfig() {
-        onOpenConfig()
+    @objc func openConfig() {
+        actions.openConfig()
     }
 }

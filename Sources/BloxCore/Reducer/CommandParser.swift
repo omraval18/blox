@@ -27,6 +27,7 @@ extension Command {
         switch word {
         case "toggle-floating": .toggleFloating
         case "fullscreen": .toggleFullscreen
+        case "close": .close
         case "balance": .balance
         case "retile": .retile
         case "reload-config": .reloadConfig

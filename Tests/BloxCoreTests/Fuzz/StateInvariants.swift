@@ -13,8 +13,8 @@ enum StateInvariants {
         if Set(all).count != all.count {
             result.append("a window lives in two places")
         }
-        if !Set(state.minSizes.keys).isSubset(of: all) {
-            result.append("minSize kept for a dead window")
+        if !Set(state.sizeLimits.keys).isSubset(of: all) {
+            result.append("size limits kept for a dead window")
         }
         return result
     }
@@ -59,8 +59,10 @@ enum StateInvariants {
             guard let workspace = state.workspaces[monitor.workspace],
                   workspace.layout != .monocle, workspace.fullscreen == nil else { return [] }
             let frames = state.tileFrames(workspace, in: monitor.frame)
+            let invalid = frames.contains { $0.isNull || !$0.minX.isFinite || !$0.width.isFinite }
             let outside = frames.contains { !monitor.frame.insetBy(dx: -1, dy: -1).contains($0) }
-            return (outside ? ["tile leaves its monitor"] : []) + (overlaps(frames) ? ["tiles overlap"] : [])
+            return (invalid ? ["tile is not a real rect"] : []) + (outside ? ["tile leaves its monitor"] : [])
+                + (overlaps(frames) ? ["tiles overlap"] : [])
         }
     }
 

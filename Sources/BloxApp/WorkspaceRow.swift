@@ -1,7 +1,12 @@
+import AppKit
 import BloxCore
 
-/// One line of the workspace menu: the workspace and the apps that have windows in it.
+/// One workspace in the menu: the workspace and the apps that have windows in it, in window order.
 struct WorkspaceRow: Equatable {
     let info: WorkspaceInfo
-    let apps: [String]
+    let apps: [pid_t]
+
+    var appNames: [String] {
+        apps.compactMap { NSRunningApplication(processIdentifier: $0)?.localizedName }
+    }
 }

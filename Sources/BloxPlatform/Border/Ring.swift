@@ -2,16 +2,23 @@ import AppKit
 import BloxCore
 import QuartzCore
 
-/// One click-through ring along the inside edge of one window, stacked directly above that window so menus
-/// and
-/// other windows still cover it. It changes only when its window moves or its style does.
+/// One click-through ring along the inside edge of one window, stacked directly above that window so
+/// menus and other windows still cover it. It changes only when its window moves or its style does.
+///
+/// Resizing a window every frame makes the window server reallocate its surface each time, which
+/// cannot keep up with an animation. So while its window glides, the panel grows once to cover the
+/// screen and only the layers move inside it (pure compositing); once the window settles, the panel
+/// shrinks back to hug it.
 @MainActor
 final class Ring {
     private let panel: RingPanel
     private let gradient = CAGradientLayer()
-    private let shape = CAShapeLayer()
+    /// The ring's shape: a layer border, drawn by the GPU without rasterizing a path.
+    private let outline = CALayer()
     private var style = BorderSettings()
     private var windowFrame = CGRect.zero
+    /// The panel's frame in top-left space; covers `windowFrame`.
+    private var panelFrame = CGRect.zero
     private(set) var isActive = false
 
     init() {
@@ -27,34 +34,38 @@ final class Ring {
         panel.ignoresMouseEvents = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
+        // Panels fade in and out by default; a fading ring lingers where its window just left.
+        panel.animationBehavior = .none
         panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         let view = NSView()
         view.wantsLayer = true
-        shape.fillRule = .evenOdd
-        gradient.mask = shape
+        outline.borderColor = CGColor(gray: 0, alpha: 1)
+        gradient.mask = outline
         view.layer?.addSublayer(gradient)
         panel.contentView = view
     }
 
-    /// Applies colors for the active or inactive look.
+    /// Applies colors and shape for the active or inactive look.
     func configure(_ settings: BorderSettings, active: Bool) {
         style = settings
         isActive = active
         let colors = active ? settings.colors : settings.inactiveColors
         let cgColors = colors.map { CGColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: $0.alpha) }
-        gradient.colors = cgColors.count == 1 ? cgColors + cgColors : cgColors
         let radians = settings.angle * .pi / 180
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradient.colors = cgColors.count == 1 ? cgColors + cgColors : cgColors
         gradient.startPoint = CGPoint(x: 0.5 - cos(radians) / 2, y: 0.5 - sin(radians) / 2)
         gradient.endPoint = CGPoint(x: 0.5 + cos(radians) / 2, y: 0.5 + sin(radians) / 2)
-        if panel.isVisible {
-            layout()
-        }
+        outline.borderWidth = settings.width
+        CATransaction.commit()
+        placeLayers()
     }
 
     /// Shows the ring around `frame` (top-left coordinates), directly above window `windowNumber`.
     func show(around frame: CGRect, above windowNumber: UInt32) {
         windowFrame = frame
-        layout()
+        settle()
         panel.order(.above, relativeTo: Int(windowNumber))
     }
 
@@ -63,39 +74,52 @@ final class Ring {
         panel.order(.above, relativeTo: Int(windowNumber))
     }
 
+    /// One step of a moving window: the panel grows to the screen at most once, layers do the rest.
     func move(to frame: CGRect) {
+        guard frame != windowFrame || !panelFrame.contains(frame) else { return }
         windowFrame = frame
-        layout()
+        if !panelFrame.contains(frame) {
+            resizePanel(to: Displays.screen(containing: frame).union(frame).union(panelFrame))
+        }
+        placeLayers()
+    }
+
+    /// The window stopped moving: the panel hugs it again, so an idle ring costs only its own size.
+    func settle() {
+        guard panelFrame != windowFrame else { return }
+        resizePanel(to: windowFrame)
+        placeLayers()
     }
 
     func close() {
         panel.orderOut(nil)
     }
 
+    private func resizePanel(to frame: CGRect) {
+        let resized = frame.size != panelFrame.size
+        panelFrame = frame
+        if resized {
+            panel.setFrame(Displays.appKitRect(frame), display: false)
+        } else {
+            panel.setFrameOrigin(Displays.appKitRect(frame).origin)
+        }
+    }
+
     /// The ring is drawn inside the window's edge, as Hyprland does, so it never depends on gaps and
     /// stays visible on windows that touch the screen edge.
-    private func layout() {
-        panel.setFrame(Displays.appKitRect(windowFrame), display: false)
-        let bounds = CGRect(origin: .zero, size: windowFrame.size)
+    private func placeLayers() {
+        // Layers have a bottom-left origin inside the panel.
+        let local = CGRect(
+            x: windowFrame.minX - panelFrame.minX,
+            y: panelFrame.maxY - windowFrame.maxY,
+            width: windowFrame.width,
+            height: windowFrame.height,
+        )
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        gradient.frame = bounds
-        shape.frame = bounds
-        shape.path = ringPath(in: bounds)
+        gradient.frame = local
+        outline.frame = CGRect(origin: .zero, size: local.size)
+        outline.cornerRadius = max(0, min(style.radius, min(local.width, local.height) / 2))
         CATransaction.commit()
-    }
-
-    private func ringPath(in bounds: CGRect) -> CGPath {
-        let inner = bounds.insetBy(dx: style.width, dy: style.width)
-        let path = CGMutablePath()
-        let outerRadius = clamp(style.radius, bounds)
-        let innerRadius = clamp(style.radius - style.width, inner)
-        path.addRoundedRect(in: bounds, cornerWidth: outerRadius, cornerHeight: outerRadius)
-        path.addRoundedRect(in: inner, cornerWidth: innerRadius, cornerHeight: innerRadius)
-        return path
-    }
-
-    private func clamp(_ radius: Double, _ rect: CGRect) -> Double {
-        max(0, min(radius, min(rect.width, rect.height) / 2))
     }
 }

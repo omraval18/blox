@@ -13,7 +13,8 @@ struct ExampleConfigTests {
     @Test func `aerospace compat example parses and covers the keymap`() throws {
         let config = try example("aerospace-compat.toml")
         let main = try #require(config.modes["main"])
-        #expect(main.count == 2 * 28 + 18)
+        #expect(main.count == 2 * 28 + 19)
+        #expect(config.settings.defaultLayout == .tiles)
         #expect(Set(config.modes.keys) == ["main", "resize", "service", "anim"])
         #expect(main
             .contains { $0.chord == Chord(parsing: "alt-tab") && $0.commands == [.workspaceBackAndForth] })
@@ -23,6 +24,7 @@ struct ExampleConfigTests {
         #expect(config.workspaceNames.count == 28)
         #expect(config.settings.border.inactiveColors.count == 2)
         #expect(config.settings.animation.curve == Curve(parsing: "wind"))
+        #expect(config.settings.animation.workspaces.duration == 0.3)
     }
 
     @Test func `fullscreen binding runs the dock command`() throws {

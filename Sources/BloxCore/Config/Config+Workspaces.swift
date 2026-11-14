@@ -1,5 +1,5 @@
 public extension Config {
-    /// Every workspace name the config can reach: from bindings and from window rules.
+    /// Every workspace name the config can reach: from bindings, window rules and workspace rules.
     var workspaceNames: [String] {
         let bound = modes.values.joined().flatMap(\.commands).compactMap { command -> String? in
             switch command {
@@ -7,6 +7,6 @@ public extension Config {
             default: nil
             }
         }
-        return Set(bound + settings.rules.values.compactMap(\.workspace)).sorted()
+        return Set(bound + settings.rules.values.compactMap(\.workspace) + settings.workspaces.keys).sorted()
     }
 }

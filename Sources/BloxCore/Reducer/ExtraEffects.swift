@@ -3,6 +3,7 @@ enum ExtraEffects {
     static func effects(for command: Command, from old: State, to new: State) -> [Effect] {
         switch command {
         case let .exec(line): return [.run(line)]
+        case .close: return new.focusedWindow.map { [.close($0)] } ?? []
         case .toggleFullscreen: return new.focusedWindow.map { [.focus($0)] } ?? []
         case .focusChanged: return []
         default:

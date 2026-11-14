@@ -6,4 +6,6 @@ enum AXEvent {
     case focused(AXUIElement)
     case minimized(AXUIElement)
     case restored(AXUIElement)
+    /// Moved or resized, by Blox or by anyone else.
+    case reshaped(AXUIElement)
 }

@@ -20,7 +20,7 @@ extension State {
     }
 
     mutating func removeWindow(_ id: WindowID) {
-        minSizes.removeValue(forKey: id)
+        sizeLimits.removeValue(forKey: id)
         guard let name = workspaceName(containing: id) else { return }
         update(name) { $0.remove(id) }
     }
@@ -32,13 +32,13 @@ extension State {
         showWorkspace(name)
     }
 
-    /// Remembers a window's minimum size (never shrinks it, so layouts settle).
-    mutating func learnMinSize(_ id: WindowID, _ size: CGSize) {
+    /// Remembers what sizes a window accepts, merged with what was seen before.
+    mutating func learnSizeLimits(_ id: WindowID, _ observed: SizeLimits) {
         guard workspaceName(containing: id) != nil else { return }
-        let known = minSizes[id] ?? .zero
-        let merged = CGSize(width: max(known.width, size.width), height: max(known.height, size.height))
+        let known = sizeLimits[id] ?? SizeLimits()
+        let merged = known.merged(with: observed)
         if merged != known {
-            minSizes[id] = merged
+            sizeLimits[id] = merged
         }
     }
 
@@ -69,7 +69,7 @@ extension State {
         if name == "off" {
             settings.animation.enabled = false
         } else if let style = AnimationStyle.named(name) {
-            settings.animation = style
+            settings.animation.applyPreset(style)
         }
     }
 }
