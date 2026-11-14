@@ -49,6 +49,67 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   (`borderangle`, would need an always-running animation), window fade (no AX opacity), per-app AX
   queues (needs non-Sendable AX types off the main actor).
 
+## Menu bar redesign (on `tune/hyprland-feel`, uncommitted at time of writing)
+
+- The bar item is a template pill with the current workspace (filled; outlined plus the mode name
+  while a non-main mode is active; ` !` on a config error). `StatusBadge`.
+- The menu lists only workspaces in use (holding windows or on a display), not every configured
+  name: a header with the focused workspace set large, rows with a name badge, app icons and names,
+  a window count, native footer items with symbols. Typing a workspace's key while open switches.
+- Items are built in `menuNeedsUpdate`, so while closed a state change only redraws the pill
+  (it used to rebuild the whole NSMenu on every focus change).
+- Verified by an offscreen render of the views in light and dark; the live menu (highlight via
+  `menu(_:willHighlight:)`, click via `performActionForItem`, key equivalents) is unverified.
+
+## Live-test fixes (2026-11-14, uncommitted)
+
+- Border rings follow the window's real frame: windows subscribe to AX moved/resized, and
+  `WindowSystem.reshaped` redraws the ring when Blox is not animating that window. Before, rings
+  sat at the requested frame, so a clamped window (System Settings) had a ring around empty space.
+- `State.minSizes` became `State.sizeLimits` (`SizeLimits`: minimum and maximum). Platform's
+  `checkSizeLimits` reports a window that settles >24 pt smaller than its tile as a maximum, and
+  dwindle clamps its split so the spare width goes to the neighbour and the gap stays constant.
+  Risk: a learned maximum lasts for the window's lifetime, so an app slower than 250 ms to finish
+  resizing could be mis-learned as fixed-size.
+- Hidden windows stay hidden. Traced live: macOS clamps a window sliding off-screen so 40 pt stay
+  visible, which left a strip at the edge (overlapping the incoming workspace) until the slide
+  ended. `AnimationTrack.Finish.park(leaving:)` now parks a window once <= 48 pt remain on its
+  screen. And `WindowSystem+Reshape` re-parks a hidden window that comes back on screen (seen:
+  Ghostty full-screen behind the active workspace), once per hide, so an app that insists wins
+  rather than ping-ponging.
+- Border rings no longer resize their panel per animation frame (a window-server surface
+  reallocation each step, which made the ring trail a growing window). While animating, `Ring`
+  grows its panel once to the screen and moves only layers; `settle()` (animation landed, unanimated
+  unpark, app reshape) shrinks it back. The ring shape is a `CALayer` border mask, not a CGPath.
+- Startup snaps instead of animating. Adopting each existing window re-tiled the rest, so every
+  window glided (and resized) through N layouts at once and the first seconds felt laggy.
+  `Adoption.collecting` holds the last frame per window during `start()` and `placePending()`
+  applies each once, without animation (as AeroSpace does). New windows still animate.
+- Animation glitches, traced live: ring panels faded out on hide (a ghost ring for ~50 ms after a
+  workspace switch), fixed with `animationBehavior = .none`; overshooting curves carried windows
+  16 pt past their tile (under neighbours, off the screen edge) and re-grew ring panels every
+  frame, fixed by `Timing.travel(after:)` clamping to 0...1 (ADR 0002).
+- Fixed-size windows: once a maximum is learned, `SizeLimits.fitting` asks for exactly that size,
+  centred in the tile (System Settings alone on a workspace sits centred). On landing,
+  `fitBorder` reads the real frame, since an app that refuses a size sends no AX notification, so
+  the ring used to stay at the tile size. Fuzzing this exposed an old bug: a tile thinner than
+  the gap became `CGRect.null` (sent to AX as garbage). `Tiling.inset` now collapses it to zero
+  size inside the usable area, and the fuzz invariant rejects non-finite tiles.
+- New `tiles` layout (AeroSpace's default `tiles` + `auto` orientation: one row of full-height
+  windows sharing the width, one column on portrait). Respects size limits by water-filling
+  (`TilesLayout.shares`). Ignores `ratio`, so `resize` does nothing in it yet. The owner's config
+  and `examples/aerospace-compat.toml` now default to it; `alt-slash` = tiles,
+  `alt-shift-slash` = dwindle. The built-in default stays dwindle.
+- Ring lag during animations. Rings now follow the window's real bounds, not the requested
+  frame: after each AX step, `followBorder` asks the window server (`WindowServer.bounds`,
+  ~0.1 ms, no app round trip) and the ring is flushed per window (`CATransaction.flush()`).
+  Requested frames are wrong for apps that refuse sizes: System Settings is fixed-width, so its
+  ring glided through sizes the window never took (the owner saw "lag on System Settings only";
+  measured AX latency there is ordinary, 4-7 ms). `WindowSystem+Reshape` gathers AX move/resize
+  reports for one frame (16 ms) per window; `Ring.move`/`settle` skip no-op work. Not seen on
+  screen by the assistant: this terminal lacks Screen Recording permission, and the owner's
+  recordings were temp files deleted before they could be read.
+
 ## Verified vs not verified
 
 Verified: the pure core (layouts, reducer, config, curves, minimum-size logic, overview) by unit
