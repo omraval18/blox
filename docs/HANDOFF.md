@@ -127,6 +127,16 @@ lint only, and **none of the platform behaviour has been seen on real windows**.
   numbers on real apps (never run), and the reply over the live socket.
   To stay under the type-length limit, `FrameAnimator` lost its display link to `DisplayClock` and
   its AX writes (and the timing around them) to `FrameWriter`; behaviour unchanged.
+- Adaptive resize for slow apps (slice 4). Core: `ResizeMode(averageResizeStep:)` picks
+  `.everyFrame` or `.once` (threshold `ResizeMode.slowResizeStep` = 8 ms; unmeasured apps animate
+  fully, which is how they get measured) and `Glide` (`.blend`, `.shrinkFirst`, `.growLast`) gives
+  each step's frame; tested. Platform: `FrameWriter.begin` reads the app's resize pace from
+  `AnimationStats`; a shrinking window takes its final size before it moves, a growing one glides
+  at its old size and takes the final size in `arrive(.settle)`. Size is compared by area, so a
+  window that grows on one axis and shrinks on the other is treated as one or the other. Parking
+  tracks keep `.blend`. `FrameAnimator`'s tracks moved to `Tracks` to stay under the type-length
+  limit. Unverified on real windows: how a once-resized Chromium window looks, and whether the
+  8 ms threshold is right (check `blox stats`).
 
 ## Verified vs not verified
 
