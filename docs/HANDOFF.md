@@ -1,4 +1,4 @@
-# Blox handoff (state as of v0.0.19)
+# Blox handoff (state as of v0.0.20)
 
 Read this first in a new session, then `CLAUDE.md` (rules) and `docs/benchmarking.md`.
 
